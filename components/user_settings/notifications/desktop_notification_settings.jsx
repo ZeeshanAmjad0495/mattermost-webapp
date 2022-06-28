@@ -9,8 +9,8 @@ import {FormattedMessage} from 'react-intl';
 import semver from 'semver';
 
 import {NotificationLevels} from 'utils/constants';
-import * as Utils from 'utils/utils.jsx';
-import {t} from 'utils/i18n.jsx';
+import * as Utils from 'utils/utils';
+import {t} from 'utils/i18n';
 import SettingItemMax from 'components/setting_item_max.jsx';
 import SettingItemMin from 'components/setting_item_min';
 import {isDesktopApp} from 'utils/user_agent';
@@ -209,7 +209,7 @@ export default class DesktopNotificationSettings extends React.PureComponent {
                         <div className='mt-5'>
                             <FormattedMessage
                                 id='user.settings.notifications.threads'
-                                defaultMessage={'When enabled, any replies to a thread you\'re following will send a desktop notification.'}
+                                defaultMessage={'When enabled, any reply to a thread you\'re following will send a desktop notification.'}
                             />
                         </div>
                     </fieldset>

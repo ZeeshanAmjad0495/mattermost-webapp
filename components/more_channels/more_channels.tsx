@@ -5,31 +5,30 @@ import React from 'react';
 import {Modal} from 'react-bootstrap';
 import {FormattedMessage} from 'react-intl';
 
-import {Channel} from 'mattermost-redux/types/channels';
-import {ActionFunc, ActionResult} from 'mattermost-redux/types/actions';
+import {ActionResult} from 'mattermost-redux/types/actions';
+import {Channel} from '@mattermost/types/channels';
 import Permissions from 'mattermost-redux/constants/permissions';
 
-import {browserHistory} from 'utils/browser_history';
-
-import {getRelativeChannelURL} from 'utils/url';
-
-import NewChannelFlow from 'components/new_channel_flow';
+import NewChannelModal from 'components/new_channel_modal/new_channel_modal';
 import SearchableChannelList from 'components/searchable_channel_list.jsx';
 import TeamPermissionGate from 'components/permissions_gates/team_permission_gate';
+
+import {ModalData} from 'types/actions';
+
+import {browserHistory} from 'utils/browser_history';
 import {ModalIdentifiers} from 'utils/constants';
+import {getRelativeChannelURL} from 'utils/url';
 
 const CHANNELS_CHUNK_SIZE = 50;
 const CHANNELS_PER_PAGE = 50;
 const SEARCH_TIMEOUT_MILLISECONDS = 100;
 
 type Actions = {
-    getChannels: (teamId: string, page: number, perPage: number) => ActionFunc | void;
-    getArchivedChannels: (teamId: string, page: number, channelsPerPage: number) => ActionFunc | void;
+    getChannels: (teamId: string, page: number, perPage: number) => void;
+    getArchivedChannels: (teamId: string, page: number, channelsPerPage: number) => void;
     joinChannel: (currentUserId: string, teamId: string, channelId: string) => Promise<ActionResult>;
     searchMoreChannels: (term: string, shouldShowArchivedChannels: boolean) => Promise<ActionResult>;
-    openModal: (modalData: {modalId: string; dialogType: any; dialogProps?: any}) => Promise<{
-        data: boolean;
-    }>;
+    openModal: <P>(modalData: ModalData<P>) => void;
     closeModal: (modalId: string) => void;
 }
 
@@ -88,8 +87,8 @@ export default class MoreChannels extends React.PureComponent<Props, State> {
     handleNewChannel = () => {
         this.handleExit();
         this.props.actions.openModal({
-            modalId: ModalIdentifiers.NEW_CHANNEL_FLOW,
-            dialogType: NewChannelFlow,
+            modalId: ModalIdentifiers.NEW_CHANNEL_MODAL,
+            dialogType: NewChannelModal,
         });
     }
 
@@ -114,7 +113,7 @@ export default class MoreChannels extends React.PureComponent<Props, State> {
 
     handleJoin = async (channel: Channel, done: () => void) => {
         const {actions, currentUserId, teamId, teamName} = this.props;
-        const result = await actions.joinChannel(currentUserId, teamId, channel.id) as { error: any };
+        const result = await actions.joinChannel(currentUserId, teamId, channel.id);
 
         if (result.error) {
             this.setState({serverError: result.error.message});
@@ -142,7 +141,7 @@ export default class MoreChannels extends React.PureComponent<Props, State> {
         const searchTimeoutId = window.setTimeout(
             async () => {
                 try {
-                    const {data} = await this.props.actions.searchMoreChannels(term, this.state.shouldShowArchivedChannels) as { data: any };
+                    const {data} = await this.props.actions.searchMoreChannels(term, this.state.shouldShowArchivedChannels);
                     if (searchTimeoutId !== this.searchTimeoutId) {
                         return;
                     }

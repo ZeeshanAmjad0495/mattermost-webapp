@@ -9,7 +9,7 @@ import {FormattedMessage} from 'react-intl';
 import semver from 'semver';
 
 import Constants, {NotificationLevels} from 'utils/constants';
-import * as Utils from 'utils/utils.jsx';
+import * as Utils from 'utils/utils';
 import SettingItemMax from 'components/setting_item_max.jsx';
 import SettingItemMin from 'components/setting_item_min';
 
@@ -320,21 +320,21 @@ export default class NotificationsTab extends React.PureComponent {
                             <fieldset>
                                 <legend className='form-legend'>
                                     <FormattedMessage
-                                        id='user.settings.notifications.threads.desktop'
+                                        id='user.settings.notifications.threads.push'
                                         defaultMessage='Thread reply notifications'
                                     />
                                 </legend>
                                 <div className='checkbox'>
                                     <label>
                                         <input
-                                            id='desktopThreadsNotificationAllActivity'
+                                            id='pushThreadsNotificationAllActivity'
                                             type='checkbox'
-                                            name='desktopThreadsNotificationLevel'
+                                            name='pushThreadsNotificationLevel'
                                             checked={this.state.pushThreads === NotificationLevels.ALL}
                                             onChange={this.handleNotifyPushThread}
                                         />
                                         <FormattedMessage
-                                            id='user.settings.notifications.threads.allActivity'
+                                            id='user.settings.notifications.push_threads.allActivity'
                                             defaultMessage={'Notify me about threads I\'m following'}
                                         />
                                     </label>
@@ -342,8 +342,8 @@ export default class NotificationsTab extends React.PureComponent {
                                 </div>
                                 <div className='mt-5'>
                                     <FormattedMessage
-                                        id='user.settings.notifications.threads'
-                                        defaultMessage={'When enabled, any replies to a thread you\'re following will send a desktop notification.'}
+                                        id='user.settings.notifications.push_threads'
+                                        defaultMessage={'When enabled, any reply to a thread you\'re following will send a mobile push notification.'}
                                     />
                                 </div>
                             </fieldset>

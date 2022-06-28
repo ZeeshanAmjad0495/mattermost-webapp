@@ -5,9 +5,9 @@ import React from 'react';
 import {Link} from 'react-router-dom';
 import {shallow} from 'enzyme';
 
-import {IncomingWebhook} from 'mattermost-redux/types/integrations';
+import {IncomingWebhook} from '@mattermost/types/integrations';
 
-import DeleteIntegration from 'components/integrations/delete_integration.jsx';
+import DeleteIntegrationLink from 'components/integrations/delete_integration_link';
 import InstalledIncomingWebhook from 'components/integrations/installed_incoming_webhook.jsx';
 
 describe('components/integrations/InstalledIncomingWebhook', () => {
@@ -95,7 +95,7 @@ describe('components/integrations/InstalledIncomingWebhook', () => {
             />,
         );
         expect(wrapper.find('.item-actions').find(Link).exists()).toBe(true);
-        expect(wrapper.find('.item-actions').find(DeleteIntegration).exists()).toBe(true);
+        expect(wrapper.find('.item-actions').find(DeleteIntegrationLink).exists()).toBe(true);
     });
 
     test('Should have the same name and description on view as it has in incomingWebhook', () => {

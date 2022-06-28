@@ -5,19 +5,22 @@ import React from 'react';
 import {FormattedMessage} from 'react-intl';
 
 import {trackEvent} from 'actions/telemetry_actions';
-import Constants, {ModalIdentifiers} from 'utils/constants';
+
 import QuickSwitchModal from 'components/quick_switch_modal';
+
+import {ModalData} from 'types/actions';
+
+import Constants, {ModalIdentifiers} from 'utils/constants';
 import * as Utils from 'utils/utils';
-import AddChannelDropdown from '../add_channel_dropdown';
+
 import ChannelFilter from '../channel_filter';
-import {AddChannelButtonTreatments} from 'mattermost-redux/constants/config';
 
 export type Props = {
-    addChannelButton?: AddChannelButtonTreatments;
     canGoForward: boolean;
     canGoBack: boolean;
     canJoinPublicChannel: boolean;
     showMoreChannelsModal: () => void;
+    showCreateUserGroupModal: () => void;
     invitePeopleModal: () => void;
     showNewChannelModal: () => void;
     showCreateCategoryModal: () => void;
@@ -25,12 +28,11 @@ export type Props = {
     unreadFilterEnabled: boolean;
     canCreateChannel: boolean;
     showUnreadsCategory: boolean;
-    townSquareDisplayName: string;
-    offTopicDisplayName: string;
-    showTutorialTip: boolean;
     isQuickSwitcherOpen: boolean;
+    userGroupsEnabled: boolean;
+    canCreateCustomGroups: boolean;
     actions: {
-        openModal: (modalData: any) => Promise<{data: boolean}>;
+        openModal: <P>(modalData: ModalData<P>) => void;
         closeModal: (modalId: string) => void;
         goBack: () => void;
         goForward: () => void;
@@ -107,26 +109,6 @@ export default class ChannelNavigator extends React.PureComponent<Props> {
     }
 
     render() {
-        let addChannelDropdown = null;
-        if (!this.props.addChannelButton || this.props.addChannelButton === AddChannelButtonTreatments.NONE) {
-            addChannelDropdown = (
-                <AddChannelDropdown
-                    showNewChannelModal={this.props.showNewChannelModal}
-                    showMoreChannelsModal={this.props.showMoreChannelsModal}
-                    invitePeopleModal={this.props.invitePeopleModal}
-                    showCreateCategoryModal={this.props.showCreateCategoryModal}
-                    canCreateChannel={this.props.canCreateChannel}
-                    canJoinPublicChannel={this.props.canJoinPublicChannel}
-                    handleOpenDirectMessagesModal={this.props.handleOpenDirectMessagesModal}
-                    unreadFilterEnabled={this.props.unreadFilterEnabled}
-                    townSquareDisplayName={this.props.townSquareDisplayName}
-                    offTopicDisplayName={this.props.offTopicDisplayName}
-                    showTutorialTip={this.props.showTutorialTip}
-                    addChannelButton={this.props.addChannelButton}
-                />
-            );
-        }
-
         return (
             <div className={'SidebarChannelNavigator webapp'}>
                 {!this.props.showUnreadsCategory && <ChannelFilter/>}
@@ -144,7 +126,6 @@ export default class ChannelNavigator extends React.PureComponent<Props> {
                         {`${Utils.isMac() ? '⌘' : 'Ctrl+'}K`}
                     </div>
                 </button>
-                {addChannelDropdown}
             </div>
         );
     }

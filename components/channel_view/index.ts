@@ -11,6 +11,9 @@ import {getRoles} from 'mattermost-redux/selectors/entities/roles_helpers';
 import {getConfig, getLicense} from 'mattermost-redux/selectors/entities/general';
 
 import {ActionFunc, GenericAction} from 'mattermost-redux/types/actions';
+import {getCurrentRelativeTeamUrl} from 'mattermost-redux/selectors/entities/teams';
+import {getIsAdvancedTextEditorEnabled} from 'mattermost-redux/selectors/entities/preferences';
+import {isFirstAdmin} from 'mattermost-redux/selectors/entities/users';
 
 import {goToLastViewedChannel} from 'actions/views/channel';
 
@@ -56,10 +59,13 @@ function mapStateToProps(state: GlobalState) {
         channelRolesLoading,
         deactivatedChannel: channel ? isDeactivatedChannel(state, channel.id) : false,
         focusedPostId: state.views.channel.focusedPostId,
-        showNextStepsEphemeral: state.views.nextSteps.show && enableOnboardingFlow,
+        enableOnboardingFlow,
         channelIsArchived: channel ? channel.delete_at !== 0 : false,
         viewArchivedChannels,
         isCloud: getLicense(state).Cloud === 'true',
+        teamUrl: getCurrentRelativeTeamUrl(state),
+        isFirstAdmin: isFirstAdmin(state),
+        isAdvancedTextEditorEnabled: getIsAdvancedTextEditorEnabled(state),
     };
 }
 

@@ -6,13 +6,20 @@ import {combineReducers} from 'redux';
 import {CloudTypes} from 'mattermost-redux/action_types';
 
 import {GenericAction} from 'mattermost-redux/types/actions';
-import {Product, Subscription, CloudCustomer, Invoice, SubscriptionStats} from 'mattermost-redux/types/cloud';
-import {Dictionary} from 'mattermost-redux/types/utilities';
+import {Product, Subscription, SubscriptionResponse, CloudCustomer, Invoice, Limits} from '@mattermost/types/cloud';
 
-function subscription(state: Subscription | null = null, action: GenericAction) {
+import {LegacyFreeProductIds} from 'utils/constants';
+
+export function subscription(state: Subscription | null = null, action: GenericAction) {
     switch (action.type) {
     case CloudTypes.RECEIVED_CLOUD_SUBSCRIPTION: {
-        return action.data;
+        const responseSubscription: SubscriptionResponse = action.data;
+        const {is_paid_tier: isPaidTier, ...baseSubscription} = responseSubscription;
+        const subscription: Subscription = {...baseSubscription};
+        if (LegacyFreeProductIds[subscription.product_id] && isPaidTier === 'true') {
+            subscription.is_legacy_cloud_paid_tier = true;
+        }
+        return subscription;
     }
     default:
         return state;
@@ -29,14 +36,14 @@ function customer(state: CloudCustomer | null = null, action: GenericAction) {
     }
 }
 
-function products(state: Dictionary<Product> | null = null, action: GenericAction) {
+function products(state: Record<string, Product> | null = null, action: GenericAction) {
     switch (action.type) {
     case CloudTypes.RECEIVED_CLOUD_PRODUCTS: {
         const productList: Product[] = action.data;
         const productDict = productList.reduce((map, obj) => {
             map[obj.id] = obj;
             return map;
-        }, {} as Dictionary<Product>);
+        }, {} as Record<string, Product>);
         return {
             ...state,
             ...productDict,
@@ -47,14 +54,14 @@ function products(state: Dictionary<Product> | null = null, action: GenericActio
     }
 }
 
-function invoices(state: Dictionary<Invoice> | null = null, action: GenericAction) {
+function invoices(state: Record<string, Invoice> | null = null, action: GenericAction) {
     switch (action.type) {
     case CloudTypes.RECEIVED_CLOUD_INVOICES: {
         const invoiceList: Invoice[] = action.data;
         const invoiceDict = invoiceList.reduce((map, obj) => {
             map[obj.id] = obj;
             return map;
-        }, {} as Dictionary<Invoice>);
+        }, {} as Record<string, Invoice>);
         return {
             ...state,
             ...invoiceDict,
@@ -65,13 +72,20 @@ function invoices(state: Dictionary<Invoice> | null = null, action: GenericActio
     }
 }
 
-function subscriptionStats(state: SubscriptionStats | null = null, action: GenericAction) {
+export interface LimitsReducer {
+    limits: Limits;
+    limitsLoaded: boolean;
+}
+const emptyLimits = {
+    limits: {},
+    limitsLoaded: false,
+};
+export function limits(state: LimitsReducer = emptyLimits, action: GenericAction) {
     switch (action.type) {
-    case CloudTypes.RECEIVED_CLOUD_SUBSCRIPTION_STATS: {
-        const data = action.data;
+    case CloudTypes.RECEIVED_CLOUD_LIMITS: {
         return {
-            ...state,
-            ...data,
+            limits: action.data,
+            limitsLoaded: true,
         };
     }
     default:
@@ -93,5 +107,6 @@ export default combineReducers({
     // represents the invoices tied to the current subscription
     invoices,
 
-    subscriptionStats,
+    // represents the usage limits associated with this workspace
+    limits,
 });

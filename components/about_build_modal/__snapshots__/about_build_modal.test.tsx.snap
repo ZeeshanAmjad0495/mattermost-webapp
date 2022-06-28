@@ -23,7 +23,7 @@ exports[`components/AboutBuildModal should match snapshot for cloud edition 1`] 
       "remove": [Function],
     }
   }
-  onExited={[Function]}
+  onExited={[MockFunction]}
   onHide={[MockFunction]}
   renderBackdrop={[Function]}
   restoreFocus={true}
@@ -111,9 +111,16 @@ exports[`components/AboutBuildModal should match snapshot for cloud edition 1`] 
         <div
           className="about-footer"
         >
-          <injectIntl(FormattedMarkdownMessage)
-            defaultMessage="Mattermost is made possible by the open source software used in our [server](!https://about.mattermost.com/platform-notice-txt/), [desktop](!https://about.mattermost.com/desktop-notice-txt/) and [mobile](!https://about.mattermost.com/mobile-notice-txt/) apps."
+          <MemoizedFormattedMessage
+            defaultMessage="Mattermost is made possible by the open source software used in our <linkServer>server</linkServer>, <linkDesktop>desktop</linkDesktop> and <linkMobile>mobile</linkMobile> apps."
             id="about.notice"
+            values={
+              Object {
+                "linkDesktop": [Function],
+                "linkMobile": [Function],
+                "linkServer": [Function],
+              }
+            }
           />
           <div
             className="copy-right"
@@ -188,7 +195,7 @@ exports[`components/AboutBuildModal should match snapshot for enterprise edition
       "remove": [Function],
     }
   }
-  onExited={[Function]}
+  onExited={[MockFunction]}
   onHide={[Function]}
   renderBackdrop={[Function]}
   restoreFocus={true}
@@ -271,7 +278,7 @@ exports[`components/AboutBuildModal should match snapshot for enterprise edition
             <span
               id="dbversionString"
             >
-               3.6.0
+               77
             </span>
           </div>
           <div>
@@ -303,11 +310,11 @@ exports[`components/AboutBuildModal should match snapshot for enterprise edition
           id="about.enterpriseEditionLearn"
         />
         <a
-          href="http://about.mattermost.com/"
+          href="https://mattermost.com/"
           rel="noopener noreferrer"
           target="_blank"
         >
-          about.mattermost.com
+          mattermost.com
         </a>
       </div>
       <div
@@ -330,19 +337,19 @@ exports[`components/AboutBuildModal should match snapshot for enterprise edition
           className="about-modal__links"
         >
           <a
-            href="https://about.mattermost.com/default-terms/"
+            href="https://mattermost.com/terms-of-use/"
             id="tosLink"
             rel="noopener noreferrer"
             target="_blank"
           >
             <MemoizedFormattedMessage
-              defaultMessage="Terms of Service"
+              defaultMessage="Terms of Use"
               id="about.tos"
             />
           </a>
            - 
           <a
-            href="https://about.mattermost.com/default-privacy-policy/"
+            href="https://mattermost.com/privacy-policy/"
             id="privacyLink"
             rel="noopener noreferrer"
             target="_blank"
@@ -359,9 +366,16 @@ exports[`components/AboutBuildModal should match snapshot for enterprise edition
       className="about-modal__notice form-group pt-3"
     >
       <p>
-        <injectIntl(FormattedMarkdownMessage)
-          defaultMessage="Mattermost is made possible by the open source software used in our [server](!https://about.mattermost.com/platform-notice-txt/), [desktop](!https://about.mattermost.com/desktop-notice-txt/) and [mobile](!https://about.mattermost.com/mobile-notice-txt/) apps."
+        <MemoizedFormattedMessage
+          defaultMessage="Mattermost is made possible by the open source software used in our <linkServer>server</linkServer>, <linkDesktop>desktop</linkDesktop> and <linkMobile>mobile</linkMobile> apps."
           id="about.notice"
+          values={
+            Object {
+              "linkDesktop": [Function],
+              "linkMobile": [Function],
+              "linkServer": [Function],
+            }
+          }
         />
       </p>
     </div>
@@ -426,7 +440,7 @@ exports[`components/AboutBuildModal should match snapshot for team edition 1`] =
       "remove": [Function],
     }
   }
-  onExited={[Function]}
+  onExited={[MockFunction]}
   onHide={[Function]}
   renderBackdrop={[Function]}
   restoreFocus={true}
@@ -509,7 +523,7 @@ exports[`components/AboutBuildModal should match snapshot for team edition 1`] =
             <span
               id="dbversionString"
             >
-               3.6.0
+               77
             </span>
           </div>
           <div>
@@ -531,11 +545,11 @@ exports[`components/AboutBuildModal should match snapshot for team edition 1`] =
           id="about.teamEditionLearn"
         />
         <a
-          href="http://www.mattermost.org/"
+          href="https://mattermost.com/community/"
           rel="noopener noreferrer"
           target="_blank"
         >
-          mattermost.org
+          mattermost.com/community/
         </a>
       </div>
       <div
@@ -558,19 +572,19 @@ exports[`components/AboutBuildModal should match snapshot for team edition 1`] =
           className="about-modal__links"
         >
           <a
-            href="https://about.mattermost.com/default-terms/"
+            href="https://mattermost.com/terms-of-use/"
             id="tosLink"
             rel="noopener noreferrer"
             target="_blank"
           >
             <MemoizedFormattedMessage
-              defaultMessage="Terms of Service"
+              defaultMessage="Terms of Use"
               id="about.tos"
             />
           </a>
            - 
           <a
-            href="https://about.mattermost.com/default-privacy-policy/"
+            href="https://mattermost.com/privacy-policy/"
             id="privacyLink"
             rel="noopener noreferrer"
             target="_blank"
@@ -587,9 +601,16 @@ exports[`components/AboutBuildModal should match snapshot for team edition 1`] =
       className="about-modal__notice form-group pt-3"
     >
       <p>
-        <injectIntl(FormattedMarkdownMessage)
-          defaultMessage="Mattermost is made possible by the open source software used in our [server](!https://about.mattermost.com/platform-notice-txt/), [desktop](!https://about.mattermost.com/desktop-notice-txt/) and [mobile](!https://about.mattermost.com/mobile-notice-txt/) apps."
+        <MemoizedFormattedMessage
+          defaultMessage="Mattermost is made possible by the open source software used in our <linkServer>server</linkServer>, <linkDesktop>desktop</linkDesktop> and <linkMobile>mobile</linkMobile> apps."
           id="about.notice"
+          values={
+            Object {
+              "linkDesktop": [Function],
+              "linkMobile": [Function],
+              "linkServer": [Function],
+            }
+          }
         />
       </p>
     </div>
@@ -653,7 +674,7 @@ exports[`components/AboutBuildModal should show ci if a ci build 1`] = `
       "remove": [Function],
     }
   }
-  onExited={[Function]}
+  onExited={[MockFunction]}
   onHide={[Function]}
   renderBackdrop={[Function]}
   restoreFocus={true}
@@ -736,7 +757,7 @@ exports[`components/AboutBuildModal should show ci if a ci build 1`] = `
             <span
               id="dbversionString"
             >
-               3.6.0
+               77
             </span>
           </div>
           <div>
@@ -769,11 +790,11 @@ exports[`components/AboutBuildModal should show ci if a ci build 1`] = `
           id="about.teamEditionLearn"
         />
         <a
-          href="http://www.mattermost.org/"
+          href="https://mattermost.com/community/"
           rel="noopener noreferrer"
           target="_blank"
         >
-          mattermost.org
+          mattermost.com/community/
         </a>
       </div>
       <div
@@ -796,19 +817,19 @@ exports[`components/AboutBuildModal should show ci if a ci build 1`] = `
           className="about-modal__links"
         >
           <a
-            href="https://about.mattermost.com/default-terms/"
+            href="https://mattermost.com/terms-of-use/"
             id="tosLink"
             rel="noopener noreferrer"
             target="_blank"
           >
             <MemoizedFormattedMessage
-              defaultMessage="Terms of Service"
+              defaultMessage="Terms of Use"
               id="about.tos"
             />
           </a>
            - 
           <a
-            href="https://about.mattermost.com/default-privacy-policy/"
+            href="https://mattermost.com/privacy-policy/"
             id="privacyLink"
             rel="noopener noreferrer"
             target="_blank"
@@ -825,9 +846,16 @@ exports[`components/AboutBuildModal should show ci if a ci build 1`] = `
       className="about-modal__notice form-group pt-3"
     >
       <p>
-        <injectIntl(FormattedMarkdownMessage)
-          defaultMessage="Mattermost is made possible by the open source software used in our [server](!https://about.mattermost.com/platform-notice-txt/), [desktop](!https://about.mattermost.com/desktop-notice-txt/) and [mobile](!https://about.mattermost.com/mobile-notice-txt/) apps."
+        <MemoizedFormattedMessage
+          defaultMessage="Mattermost is made possible by the open source software used in our <linkServer>server</linkServer>, <linkDesktop>desktop</linkDesktop> and <linkMobile>mobile</linkMobile> apps."
           id="about.notice"
+          values={
+            Object {
+              "linkDesktop": [Function],
+              "linkMobile": [Function],
+              "linkServer": [Function],
+            }
+          }
         />
       </p>
     </div>
@@ -891,7 +919,7 @@ exports[`components/AboutBuildModal should show dev if this is a dev build 1`] =
       "remove": [Function],
     }
   }
-  onExited={[Function]}
+  onExited={[MockFunction]}
   onHide={[Function]}
   renderBackdrop={[Function]}
   restoreFocus={true}
@@ -974,7 +1002,7 @@ exports[`components/AboutBuildModal should show dev if this is a dev build 1`] =
             <span
               id="dbversionString"
             >
-               3.6.0
+               77
             </span>
           </div>
           <div>
@@ -996,11 +1024,11 @@ exports[`components/AboutBuildModal should show dev if this is a dev build 1`] =
           id="about.teamEditionLearn"
         />
         <a
-          href="http://www.mattermost.org/"
+          href="https://mattermost.com/community/"
           rel="noopener noreferrer"
           target="_blank"
         >
-          mattermost.org
+          mattermost.com/community/
         </a>
       </div>
       <div
@@ -1023,19 +1051,19 @@ exports[`components/AboutBuildModal should show dev if this is a dev build 1`] =
           className="about-modal__links"
         >
           <a
-            href="https://about.mattermost.com/default-terms/"
+            href="https://mattermost.com/terms-of-use/"
             id="tosLink"
             rel="noopener noreferrer"
             target="_blank"
           >
             <MemoizedFormattedMessage
-              defaultMessage="Terms of Service"
+              defaultMessage="Terms of Use"
               id="about.tos"
             />
           </a>
            - 
           <a
-            href="https://about.mattermost.com/default-privacy-policy/"
+            href="https://mattermost.com/privacy-policy/"
             id="privacyLink"
             rel="noopener noreferrer"
             target="_blank"
@@ -1052,9 +1080,16 @@ exports[`components/AboutBuildModal should show dev if this is a dev build 1`] =
       className="about-modal__notice form-group pt-3"
     >
       <p>
-        <injectIntl(FormattedMarkdownMessage)
-          defaultMessage="Mattermost is made possible by the open source software used in our [server](!https://about.mattermost.com/platform-notice-txt/), [desktop](!https://about.mattermost.com/desktop-notice-txt/) and [mobile](!https://about.mattermost.com/mobile-notice-txt/) apps."
+        <MemoizedFormattedMessage
+          defaultMessage="Mattermost is made possible by the open source software used in our <linkServer>server</linkServer>, <linkDesktop>desktop</linkDesktop> and <linkMobile>mobile</linkMobile> apps."
           id="about.notice"
+          values={
+            Object {
+              "linkDesktop": [Function],
+              "linkMobile": [Function],
+              "linkServer": [Function],
+            }
+          }
         />
       </p>
     </div>

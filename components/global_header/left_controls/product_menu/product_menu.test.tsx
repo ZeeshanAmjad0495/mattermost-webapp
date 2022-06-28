@@ -2,50 +2,72 @@
 // See LICENSE.txt for license information.
 import React from 'react';
 import {shallow} from 'enzyme';
+import * as reactRedux from 'react-redux';
+import configureStore from 'redux-mock-store';
 
-import {ProductComponent} from 'types/store/plugins';
 import {TopLevelProducts} from 'utils/constants';
+import {TestHelper} from 'utils/test_helper';
+
 import * as hooks from '../../hooks';
 
 import ProductMenu, {ProductMenuButton, ProductMenuContainer} from './product_menu';
 import ProductMenuItem from './product_menu_item';
 import ProductMenuList from './product_menu_list';
 
-function makeProduct(name: string): ProductComponent {
-    return {
-        id: '',
-        pluginId: '',
-        switcherIcon: 'none',
-        switcherText: name,
-        baseURL: '',
-        switcherLinkURL: '',
-        mainComponent: null,
-        headerCentreComponent: null,
-        headerRightComponent: null,
-    };
-}
-
 const spyProduct = jest.spyOn(hooks, 'useCurrentProductId');
 spyProduct.mockReturnValue(null);
 
 describe('components/global/product_switcher', () => {
+    const useDispatchMock = jest.spyOn(reactRedux, 'useDispatch');
+    const useSelectorMock = jest.spyOn(reactRedux, 'useSelector');
+    const mockStore = configureStore();
+
     beforeEach(() => {
         const products = [
-            makeProduct(TopLevelProducts.BOARDS),
-            makeProduct(TopLevelProducts.PLAYBOOKS),
+            TestHelper.makeProduct(TopLevelProducts.BOARDS),
+            TestHelper.makeProduct(TopLevelProducts.PLAYBOOKS),
         ];
         const spyProducts = jest.spyOn(hooks, 'useProducts');
         spyProducts.mockReturnValue(products);
+        useDispatchMock.mockClear();
+        useSelectorMock.mockClear();
     });
 
     it('should match snapshot', () => {
-        const wrapper = shallow(<ProductMenu/>);
+        const state = {
+            views: {
+                productMenu: {
+                    switcherOpen: false,
+                },
+            },
+        };
+        const store = mockStore(state);
+        const dummyDispatch = jest.fn();
+        useDispatchMock.mockReturnValue(dummyDispatch);
+        const wrapper = shallow(<reactRedux.Provider store={store}><ProductMenu/></reactRedux.Provider>);
 
         expect(wrapper).toMatchSnapshot();
     });
 
     it('should render once when there are no top level products available', () => {
-        const wrapper = shallow(<ProductMenu/>);
+        const state = {
+            users: {
+                currentUserId: 'test_id',
+            },
+            views: {
+                productMenu: {
+                    switcherOpen: true,
+                },
+            },
+        };
+        const store = mockStore(state);
+        const dummyDispatch = jest.fn();
+        useDispatchMock.mockReturnValue(dummyDispatch);
+        useSelectorMock.mockReturnValue(true);
+        const wrapper = shallow(<ProductMenu/>, {
+            wrappingComponent: reactRedux.Provider,
+            wrappingComponentProps: {store},
+        });
 
         const spyProducts = jest.spyOn(hooks, 'useProducts');
 
@@ -55,10 +77,24 @@ describe('components/global/product_switcher', () => {
     });
 
     it('should render the correct amount of times when there are products available', () => {
-        const wrapper = shallow(<ProductMenu/>);
+        const state = {
+            views: {
+                productMenu: {
+                    switcherOpen: true,
+                },
+            },
+        };
+        const store = mockStore(state);
+        const dummyDispatch = jest.fn();
+        useDispatchMock.mockReturnValue(dummyDispatch);
+        useSelectorMock.mockReturnValue(true);
+        const wrapper = shallow(<ProductMenu/>, {
+            wrappingComponent: reactRedux.Provider,
+            wrappingComponentProps: {store},
+        });
         const products = [
-            makeProduct(TopLevelProducts.BOARDS),
-            makeProduct(TopLevelProducts.PLAYBOOKS),
+            TestHelper.makeProduct(TopLevelProducts.BOARDS),
+            TestHelper.makeProduct(TopLevelProducts.PLAYBOOKS),
         ];
 
         const spyProducts = jest.spyOn(hooks, 'useProducts');
@@ -69,7 +105,21 @@ describe('components/global/product_switcher', () => {
     });
 
     it('should have an active button state when the switcher menu is open', () => {
-        const wrapper = shallow(<ProductMenu/>);
+        const state = {
+            views: {
+                productMenu: {
+                    switcherOpen: true,
+                },
+            },
+        };
+        const store = mockStore(state);
+        const dummyDispatch = jest.fn();
+        useDispatchMock.mockReturnValue(dummyDispatch);
+        useSelectorMock.mockReturnValue(true);
+        const wrapper = shallow(<ProductMenu/>, {
+            wrappingComponent: reactRedux.Provider,
+            wrappingComponentProps: {store},
+        });
         const setState = jest.fn();
 
         const useStateSpy = jest.spyOn(React, 'useState');
@@ -81,7 +131,21 @@ describe('components/global/product_switcher', () => {
     });
 
     it('should match snapshot with product switcher menu', () => {
-        const wrapper = shallow(<ProductMenu/>);
+        const state = {
+            views: {
+                productMenu: {
+                    switcherOpen: true,
+                },
+            },
+        };
+        const store = mockStore(state);
+        const dummyDispatch = jest.fn();
+        useDispatchMock.mockReturnValue(dummyDispatch);
+        useSelectorMock.mockReturnValue(true);
+        const wrapper = shallow(<ProductMenu/>, {
+            wrappingComponent: reactRedux.Provider,
+            wrappingComponentProps: {store},
+        });
 
         expect(wrapper.find(ProductMenuList)).toHaveLength(1);
         expect(wrapper).toMatchSnapshot();

@@ -8,11 +8,11 @@ import {FormattedMessage, injectIntl} from 'react-intl';
 import Toast from 'components/toast/toast';
 import Timestamp, {RelativeRanges} from 'components/timestamp';
 import {isIdNotPost, getNewMessageIndex} from 'utils/post_utils';
-import * as Utils from 'utils/utils.jsx';
+import * as Utils from 'utils/utils';
 import {isToday} from 'utils/datetime';
 import Constants from 'utils/constants';
 import {browserHistory} from 'utils/browser_history';
-import {SearchShortcut} from 'components/search_shortcut/search_shortcut';
+import {SearchShortcut} from 'components/search_shortcut';
 import {HintToast} from 'components/hint-toast/hint_toast';
 
 const TOAST_TEXT_COLLAPSE_WIDTH = 500;

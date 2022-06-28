@@ -10,6 +10,13 @@ declare module 'dynamic-virtualized-list' {
         scrollHeight: number;
     }
 
+    export type OnItemsRenderedArgs = {
+        overscanStartIndex: number;
+        overscanStopIndex: number;
+        visibleStartIndex: number;
+        visibleStopIndex: number;
+    }
+
     interface DynamicSizeListProps {
         canLoadMorePosts: (id?: string) => void;
         children: ({data: any, itemId: any, style: any}) => JSX.Element;
@@ -37,5 +44,6 @@ declare module 'dynamic-virtualized-list' {
     export class DynamicSizeList extends React.PureComponent<DynamicSizeListProps> {
         scrollTo(scrollOffset: number, scrollByValue?: number, useAnimationFrame?: boolean): void;
         scrollToItem(index: number, align: string, offset?: number): void;
+        _getRangeToRender(): number[];
     }
 }

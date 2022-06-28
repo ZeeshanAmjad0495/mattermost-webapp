@@ -5,11 +5,10 @@ import React from 'react';
 import {FormattedMessage} from 'react-intl';
 import {uniq, difference} from 'lodash';
 
-import {Role} from 'mattermost-redux/types/roles';
+import {Role} from '@mattermost/types/roles';
 import {Client4} from 'mattermost-redux/client';
 
-import {UserProfile} from 'mattermost-redux/types/users';
-import {Dictionary} from 'mattermost-redux/types/utilities';
+import {UserProfile} from '@mattermost/types/users';
 import {ActionResult} from 'mattermost-redux/types/actions';
 
 import Permissions from 'mattermost-redux/constants/permissions';
@@ -40,8 +39,8 @@ type Props = {
 }
 
 type State = {
-    usersToAdd: Dictionary<UserProfile>;
-    usersToRemove: Dictionary<UserProfile>;
+    usersToAdd: Record<string, UserProfile>;
+    usersToRemove: Record<string, UserProfile>;
     permissionsToUpdate: PermissionsToUpdate;
     updatedRolePermissions: string[];
     saving: boolean;

@@ -8,6 +8,7 @@ import {
     joinChannel,
     markChannelAsRead,
     unfavoriteChannel,
+    deleteChannel as deleteChannelRedux,
 } from 'mattermost-redux/actions/channels';
 import * as PostActions from 'mattermost-redux/actions/posts';
 import {TeamTypes} from 'mattermost-redux/action_types';
@@ -26,7 +27,13 @@ import {
     isFavoriteChannel,
     isManuallyUnread,
 } from 'mattermost-redux/selectors/entities/channels';
-import {getCurrentRelativeTeamUrl, getCurrentTeam, getCurrentTeamId, getTeamsList} from 'mattermost-redux/selectors/entities/teams';
+import {
+    getCurrentRelativeTeamUrl,
+    getCurrentTeam,
+    getCurrentTeamId,
+    getTeam,
+    getTeamsList,
+} from 'mattermost-redux/selectors/entities/teams';
 import {getCurrentUserId, getUserByUsername} from 'mattermost-redux/selectors/entities/users';
 import {getMostRecentPostIdInChannel, getPost} from 'mattermost-redux/selectors/entities/posts';
 import {makeAddLastViewAtToProfiles} from 'mattermost-redux/selectors/entities/utils';
@@ -34,17 +41,20 @@ import {makeAddLastViewAtToProfiles} from 'mattermost-redux/selectors/entities/u
 import {getChannelByName} from 'mattermost-redux/utils/channel_utils';
 import EventEmitter from 'mattermost-redux/utils/event_emitter';
 
+import {closeRightHandSide} from 'actions/views/rhs';
 import {openDirectChannelToUserId} from 'actions/channel_actions.jsx';
 import {loadCustomStatusEmojisForPostList} from 'actions/emoji_actions';
 import {getLastViewedChannelName} from 'selectors/local_storage';
 import {getLastPostsApiTimeForChannel} from 'selectors/views/channel';
 import {getSocketStatus} from 'selectors/views/websocket';
+import {getSelectedPost, getSelectedPostId} from 'selectors/rhs';
 
 import {browserHistory} from 'utils/browser_history';
 import {Constants, ActionTypes, EventTypes, PostRequestTypes} from 'utils/constants';
-import {isMobile} from 'utils/utils.jsx';
+import {isMobile} from 'utils/utils';
 import LocalStorageStore from 'stores/local_storage_store.jsx';
 import {isArchivedChannel} from 'utils/channel_utils';
+import {unsetEditingPost} from '../post_actions';
 
 export function checkAndSetMobileView() {
     return (dispatch) => {
@@ -84,7 +94,8 @@ export function switchToChannelById(channelId) {
 export function switchToChannel(channel) {
     return async (dispatch, getState) => {
         const state = getState();
-        const teamUrl = getCurrentRelativeTeamUrl(state);
+        const selectedTeamId = channel.team_id;
+        const teamUrl = selectedTeamId ? `/${getTeam(state, selectedTeamId).name}` : getCurrentRelativeTeamUrl(state);
 
         if (channel.userId) {
             const username = channel.userId ? channel.name : channel.display_name;
@@ -101,9 +112,13 @@ export function switchToChannel(channel) {
         } else if (channel.type === Constants.GM_CHANNEL) {
             const gmChannel = getChannel(state, channel.id);
             browserHistory.push(`${teamUrl}/channels/${gmChannel.name}`);
+        } else if (channel.type === Constants.THREADS) {
+            browserHistory.push(`${teamUrl}/${channel.name}`);
         } else {
             browserHistory.push(`${teamUrl}/channels/${channel.name}`);
         }
+
+        dispatch(unsetEditingPost());
 
         return {data: true};
     };
@@ -133,7 +148,7 @@ export function leaveChannel(channelId) {
         const teamUrl = getCurrentRelativeTeamUrl(state);
 
         if (!isArchivedChannel(channel)) {
-            LocalStorageStore.removePreviousChannelName(currentUserId, currentTeam.id, state);
+            LocalStorageStore.removePreviousChannel(currentUserId, currentTeam.id, state);
         }
         const {error} = await dispatch(leaveChannelRedux(channelId));
         if (error) {
@@ -145,11 +160,16 @@ export function leaveChannel(channelId) {
         const channelsInTeam = getChannelsNameMapInCurrentTeam(state);
         const prevChannel = getChannelByName(channelsInTeam, prevChannelName);
         if (!prevChannel || !getMyChannelMemberships(state)[prevChannel.id]) {
-            LocalStorageStore.removePreviousChannelName(currentUserId, currentTeam.id, state);
+            LocalStorageStore.removePreviousChannel(currentUserId, currentTeam.id, state);
+        }
+        const selectedPost = getSelectedPost(state);
+        const selectedPostId = getSelectedPostId(state);
+        if (selectedPostId && selectedPost.exists === false) {
+            dispatch(closeRightHandSide());
         }
 
         if (getMyChannels(getState()).filter((c) => c.type === Constants.OPEN_CHANNEL || c.type === Constants.PRIVATE_CHANNEL).length === 0) {
-            LocalStorageStore.removePreviousChannelName(currentUserId, currentTeam.id, state);
+            LocalStorageStore.removePreviousChannel(currentUserId, currentTeam.id, state);
             dispatch(selectTeam(''));
             dispatch({type: TeamTypes.LEAVE_TEAM, data: currentTeam});
             browserHistory.push('/');
@@ -172,7 +192,7 @@ export function leaveDirectChannel(channelName) {
             const previousChannel = LocalStorageStore.getPreviousChannelName(currentUserId, currentTeam.id, state);
             const penultimateChannel = LocalStorageStore.getPenultimateChannelName(currentUserId, currentTeam.id, state);
             if (channelName === previousChannel) {
-                LocalStorageStore.removePreviousChannelName(currentUserId, currentTeam.id, state);
+                LocalStorageStore.removePreviousChannel(currentUserId, currentTeam.id, state);
             } else if (channelName === penultimateChannel) {
                 LocalStorageStore.removePenultimateChannelName(currentUserId, currentTeam.id, state);
             }
@@ -189,11 +209,12 @@ export function autocompleteUsersInChannel(prefix, channelId) {
         const state = getState();
         const currentTeamId = getCurrentTeamId(state);
 
-        const respose = await dispatch(autocompleteUsers(prefix, currentTeamId, channelId));
-        const data = respose.data;
+        const response = await dispatch(autocompleteUsers(prefix, currentTeamId, channelId));
+
+        const data = response.data;
         if (data) {
             return {
-                ...respose,
+                ...response,
                 data: {
                     ...data,
                     users: addLastViewAtToProfiles(state, data.users || []),
@@ -202,7 +223,7 @@ export function autocompleteUsersInChannel(prefix, channelId) {
             };
         }
 
-        return respose;
+        return response;
     };
 }
 
@@ -454,5 +475,23 @@ export function updateToastStatus(status) {
             type: ActionTypes.UPDATE_TOAST_STATUS,
             data: status,
         });
+    };
+}
+
+export function deleteChannel(channelId) {
+    return async (dispatch, getState) => {
+        const res = await dispatch(deleteChannelRedux(channelId));
+        if (res.error) {
+            return {data: false};
+        }
+        const state = getState();
+
+        const selectedPost = getSelectedPost(state);
+        const selectedPostId = getSelectedPostId(state);
+        if (selectedPostId && !selectedPost.exists) {
+            dispatch(closeRightHandSide());
+        }
+
+        return {data: true};
     };
 }

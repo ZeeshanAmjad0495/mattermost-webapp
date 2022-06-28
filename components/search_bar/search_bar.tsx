@@ -6,10 +6,11 @@ import classNames from 'classnames';
 import {FormattedMessage, useIntl} from 'react-intl';
 
 import Constants from 'utils/constants';
-import * as Utils from 'utils/utils.jsx';
+import * as Utils from 'utils/utils';
 import SearchSuggestionList from 'components/suggestion/search_suggestion_list.jsx';
 import SuggestionDate from 'components/suggestion/suggestion_date.jsx';
-import SuggestionBox from 'components/suggestion/suggestion_box.jsx';
+import SuggestionBox from 'components/suggestion/suggestion_box';
+import SuggestionBoxComponent from 'components/suggestion/suggestion_box/suggestion_box';
 import LoadingSpinner from 'components/widgets/loading/loading_spinner';
 import Provider from 'components/suggestion/provider';
 
@@ -33,7 +34,6 @@ type Props = {
     isFocused: boolean;
     suggestionProviders: Provider[];
     isSearchingTerm: boolean;
-    isFocus: boolean;
     isSideBarRight?: boolean;
     searchType: string;
     clearSearchType?: () => void;
@@ -50,7 +50,7 @@ const defaultProps: Partial<Props> = {
 const SearchBar: React.FunctionComponent<Props> = (props: Props): JSX.Element => {
     const {isFocused, keepFocused, searchTerms, suggestionProviders} = props;
 
-    const searchRef = useRef<SuggestionBox>();
+    const searchRef = useRef<SuggestionBoxComponent>();
     const intl = useIntl();
 
     useEffect((): void => {
@@ -70,34 +70,34 @@ const SearchBar: React.FunctionComponent<Props> = (props: Props): JSX.Element =>
     }, [searchTerms]);
 
     const handleKeyDown = (e: ChangeEvent<HTMLInputElement>): void => {
-        if (Utils.isKeyPressed(e, KeyCodes.ESCAPE)) {
+        if (Utils.isKeyPressed(e as any, KeyCodes.ESCAPE)) {
             searchRef.current?.blur();
             e.stopPropagation();
             e.preventDefault();
         }
 
-        if (Utils.isKeyPressed(e, KeyCodes.DOWN)) {
+        if (Utils.isKeyPressed(e as any, KeyCodes.DOWN)) {
             e.preventDefault();
             props.updateHighlightedSearchHint(1, true);
         }
 
-        if (Utils.isKeyPressed(e, KeyCodes.UP)) {
+        if (Utils.isKeyPressed(e as any, KeyCodes.UP)) {
             e.preventDefault();
             props.updateHighlightedSearchHint(-1, true);
         }
 
-        if (Utils.isKeyPressed(e, KeyCodes.ENTER)) {
+        if (Utils.isKeyPressed(e as any, KeyCodes.ENTER)) {
             props.handleEnterKey(e);
         }
 
-        if (Utils.isKeyPressed(e, KeyCodes.BACKSPACE) && !searchTerms) {
+        if (Utils.isKeyPressed(e as any, KeyCodes.BACKSPACE) && !searchTerms) {
             if (props.clearSearchType) {
                 props.clearSearchType();
             }
         }
     };
 
-    const getSearch = (node: SuggestionBox): void => {
+    const getSearch = (node: SuggestionBoxComponent): void => {
         searchRef.current = node;
         if (props.getFocus) {
             props.getFocus(props.handleFocus);
@@ -163,9 +163,8 @@ const SearchBar: React.FunctionComponent<Props> = (props: Props): JSX.Element =>
                     dateComponent={SuggestionDate}
                     providers={suggestionProviders}
                     type='search'
-                    autoFocus={props.isFocus && searchTerms === ''}
                     delayInputUpdate={true}
-                    renderDividers={true}
+                    renderDividers={['all']}
                     clearable={true}
                     onClear={props.handleClear}
                 />

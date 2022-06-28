@@ -3,16 +3,13 @@
 
 import React from 'react';
 import {FormattedMessage, injectIntl, IntlShape} from 'react-intl';
-import {Tooltip} from 'react-bootstrap';
 import classNames from 'classnames';
 
-import OverlayTrigger from 'components/overlay_trigger';
-
 import {Constants} from 'utils/constants';
-
 import * as Emoji from 'utils/emoji.jsx';
-
 import imgTrans from 'images/img_trans.gif';
+import OverlayTrigger from 'components/overlay_trigger';
+import Tooltip from 'components/tooltip';
 
 const skinsList = [['raised_hand_with_fingers_splayed', 'default'],
     ['raised_hand_with_fingers_splayed_light_skin_tone', '1F3FB'],
@@ -66,8 +63,8 @@ export class EmojiPickerSkin extends React.PureComponent<Props, State> {
     extended() {
         const choices = skinsList.map((skinPair) => {
             const skin = skinPair[1];
-            const emoji = skinToneEmojis.get(skin);
-            const spriteClassName = classNames('emojisprite', `emoji-category-${emoji.category}`, `emoji-${emoji.image}`);
+            const emoji = skinToneEmojis.get(skin)!;
+            const spriteClassName = classNames('emojisprite', `emoji-category-${emoji.category}`, `emoji-${emoji.unified.toLowerCase()}`);
 
             return (
                 <div
@@ -107,8 +104,8 @@ export class EmojiPickerSkin extends React.PureComponent<Props, State> {
         );
     }
     collapsed() {
-        const emoji = skinToneEmojis.get(this.props.userSkinTone);
-        const spriteClassName = classNames('emojisprite', `emoji-category-${emoji.category}`, `emoji-${emoji.image}`);
+        const emoji = skinToneEmojis.get(this.props.userSkinTone)!;
+        const spriteClassName = classNames('emojisprite', `emoji-category-${emoji.category}`, `emoji-${emoji.unified.toLowerCase()}`);
         const tooltip = (
             <Tooltip
                 id='skinTooltip'
@@ -123,7 +120,7 @@ export class EmojiPickerSkin extends React.PureComponent<Props, State> {
             </Tooltip>);
         return (
             <OverlayTrigger
-                trigger={['hover']}
+                trigger={['hover', 'focus']}
                 delayShow={Constants.OVERLAY_TIME_DELAY}
                 placement='top'
                 overlay={tooltip}

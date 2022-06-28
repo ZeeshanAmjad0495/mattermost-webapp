@@ -9,9 +9,8 @@ import './thread_footer.scss';
 
 import {GlobalState} from 'types/store';
 
-import {$ID} from 'mattermost-redux/types/utilities';
-import {Post} from 'mattermost-redux/types/posts';
-import {threadIsSynthetic, UserThread} from 'mattermost-redux/types/threads';
+import {Post} from '@mattermost/types/posts';
+import {threadIsSynthetic, UserThread} from '@mattermost/types/threads';
 
 import {setThreadFollow, getThread as fetchThread} from 'mattermost-redux/actions/threads';
 import {selectPost} from 'actions/views/rhs';
@@ -28,12 +27,16 @@ import Button from 'components/threading/common/button';
 import FollowButton from 'components/threading/common/follow_button';
 
 import {THREADING_TIME} from 'components/threading/common/options';
+import {trackEvent} from 'actions/telemetry_actions';
+
 type Props = {
-    threadId: $ID<UserThread>;
+    threadId: UserThread['id'];
+    replyClick?: React.EventHandler<React.MouseEvent>;
 };
 
 function ThreadFooter({
     threadId,
+    replyClick,
 }: Props) {
     const dispatch = useDispatch();
     const currentTeamId = useSelector(getCurrentTeamId);
@@ -56,12 +59,18 @@ function ThreadFooter({
             channel_id: channelId,
         },
     } = thread;
-    const participantIds = useMemo(() => participants?.map(({id}) => id).reverse(), [participants]);
+    const participantIds = useMemo(() => (participants || []).map(({id}) => id).reverse(), [participants]);
 
     const handleReply = useCallback((e) => {
+        if (replyClick) {
+            replyClick(e);
+            return;
+        }
+
+        trackEvent('crt', 'replied_using_footer');
         e.stopPropagation();
         dispatch(selectPost({id: threadId, channel_id: channelId} as Post));
-    }, [threadId, channelId]);
+    }, [dispatch, replyClick, threadId, channelId]);
 
     const handleFollowing = useCallback((e) => {
         e.stopPropagation();
@@ -92,7 +101,7 @@ function ThreadFooter({
                 </SimpleTooltip>
             )}
 
-            {participantIds ? (
+            {participantIds && participantIds.length > 0 ? (
                 <Avatars
                     userIds={participantIds}
                     size='sm'

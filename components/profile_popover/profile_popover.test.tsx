@@ -3,7 +3,7 @@
 
 import React from 'react';
 
-import {CustomStatusDuration} from 'mattermost-redux/types/users';
+import {CustomStatusDuration} from '@mattermost/types/users';
 
 import ProfilePopover from 'components/profile_popover/profile_popover';
 
@@ -31,6 +31,7 @@ describe('components/ProfilePopover', () => {
         canManageAnyChannelMembersInCurrentTeam: true,
         isCustomStatusEnabled: true,
         isCustomStatusExpired: false,
+        isMobileView: false,
         actions: {
             getMembershipForEntities: jest.fn(),
             openDirectChannelToUserId: jest.fn(),

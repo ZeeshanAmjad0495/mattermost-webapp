@@ -6,7 +6,6 @@ import {bindActionCreators} from 'redux';
 import {withRouter} from 'react-router-dom';
 
 import {getRecentPostsChunkInChannel, makeGetPostsChunkAroundPost, getUnreadPostsChunk, getPost} from 'mattermost-redux/selectors/entities/posts';
-import {isManuallyUnread} from 'mattermost-redux/selectors/entities/channels';
 import {memoizeResult} from 'mattermost-redux/utils/helpers';
 import {markChannelAsRead, markChannelAsViewed} from 'mattermost-redux/actions/channels';
 import {makePreparePostIdsForPostList} from 'mattermost-redux/utils/post_list';
@@ -22,6 +21,7 @@ import {
     syncPostsInChannel,
     loadLatestPosts,
 } from 'actions/views/channel';
+import {getIsMobileView} from 'selectors/views/browser';
 
 import PostList from './post_list.jsx';
 
@@ -47,9 +47,10 @@ function makeMapStateToProps() {
         const channelViewState = state.views.channel;
         const lastViewedAt = channelViewState.lastChannelViewTime[channelId];
         const isPrefetchingInProcess = channelViewState.channelPrefetchStatus[channelId] === RequestStatus.STARTED;
-        const channelManuallyUnread = isManuallyUnread(state, channelId);
 
-        if (focusedPostId && unreadChunkTimeStamp !== '') {
+        const focusedPost = getPost(state, focusedPostId);
+
+        if (focusedPostId && focusedPost !== undefined && unreadChunkTimeStamp !== '') {
             chunk = getPostsChunkAroundPost(state, focusedPostId, channelId);
         } else if (unreadChunkTimeStamp) {
             chunk = getUnreadPostsChunk(state, channelId, unreadChunkTimeStamp);
@@ -81,7 +82,7 @@ function makeMapStateToProps() {
             latestPostTimeStamp,
             postListIds: postIds,
             isPrefetchingInProcess,
-            channelManuallyUnread,
+            isMobileView: getIsMobileView(state),
         };
     };
 }

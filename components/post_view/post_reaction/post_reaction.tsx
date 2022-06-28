@@ -3,19 +3,19 @@
 
 import React from 'react';
 import classNames from 'classnames';
-import {Tooltip} from 'react-bootstrap';
 import {FormattedMessage} from 'react-intl';
 
 import {Dispatch} from 'redux';
 
 import Permissions from 'mattermost-redux/constants/permissions';
 
-import {Emoji} from 'mattermost-redux/types/emojis';
+import {Emoji} from '@mattermost/types/emojis';
 
 import {Locations} from 'utils/constants';
-import {localizeMessage} from 'utils/utils.jsx';
+import {localizeMessage} from 'utils/utils';
 
 import OverlayTrigger from 'components/overlay_trigger';
+import Tooltip from 'components/tooltip';
 import ChannelPermissionGate from 'components/permissions_gates/channel_permission_gate';
 import EmojiIcon from 'components/widgets/icons/emoji_icon';
 import EmojiPickerOverlay from 'components/emoji_picker/emoji_picker_overlay.jsx';
@@ -86,7 +86,6 @@ export default class PostReaction extends React.PureComponent<Props, State> {
                         onEmojiClick={this.handleAddEmoji}
                         topOffset={TOP_OFFSET}
                         spaceRequiredAbove={spaceRequiredAbove}
-                        n={true}
                         spaceRequiredBelow={spaceRequiredBelow}
                     />
                     <OverlayTrigger

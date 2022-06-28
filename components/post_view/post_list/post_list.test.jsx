@@ -43,8 +43,8 @@ const baseProps = {
     isFirstLoad: true,
     atLatestPost: false,
     formattedPostIds: [],
-    channelManuallyUnread: false,
     isPrefetchingInProcess: false,
+    isMobileView: false,
 };
 
 describe('components/post_view/post_list', () => {

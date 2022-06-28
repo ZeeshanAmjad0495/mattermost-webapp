@@ -4,9 +4,9 @@
 import React, {ChangeEvent, ElementType, FocusEvent, KeyboardEvent, MouseEvent} from 'react';
 import {FormattedMessage} from 'react-intl';
 
-import {Channel} from 'mattermost-redux/types/channels';
+import {Channel} from '@mattermost/types/channels';
 import {ActionResult} from 'mattermost-redux/types/actions';
-import {UserProfile} from 'mattermost-redux/types/users';
+import {UserProfile} from '@mattermost/types/users';
 
 import AutosizeTextarea from 'components/autosize_textarea';
 import PostMarkdown from 'components/post_markdown';
@@ -16,10 +16,13 @@ import ChannelMentionProvider from 'components/suggestion/channel_mention_provid
 import AppCommandProvider from 'components/suggestion/command_provider/app_provider';
 import CommandProvider from 'components/suggestion/command_provider/command_provider';
 import EmoticonProvider from 'components/suggestion/emoticon_provider.jsx';
-import SuggestionBox from 'components/suggestion/suggestion_box.jsx';
+import SuggestionBox from 'components/suggestion/suggestion_box';
+import SuggestionBoxComponent from 'components/suggestion/suggestion_box/suggestion_box';
 import SuggestionList from 'components/suggestion/suggestion_list.jsx';
 
-import * as Utils from 'utils/utils.jsx';
+import * as Utils from 'utils/utils';
+
+import {TextboxElement} from './index';
 
 type Props = {
     id: string;
@@ -27,18 +30,19 @@ type Props = {
     rootId?: string;
     tabIndex?: number;
     value: string;
-    onChange: (e: ChangeEvent<HTMLInputElement>) => void;
-    onKeyPress: (e: KeyboardEvent) => void;
+    onChange: (e: ChangeEvent<TextboxElement>) => void;
+    onKeyPress: (e: KeyboardEvent<any>) => void;
     onComposition?: () => void;
     onHeightChange?: (height: number, maxHeight: number) => void;
     createMessage: string;
-    onKeyDown?: (e: KeyboardEvent) => void;
-    onSelect?: (e: React.SyntheticEvent) => void;
-    onMouseUp?: (e: React.MouseEvent) => void;
-    onKeyUp?: (e: React.KeyboardEvent) => void;
-    onBlur?: (e: FocusEvent) => void;
+    onKeyDown?: (e: KeyboardEvent<TextboxElement>) => void;
+    onSelect?: (e: React.SyntheticEvent<TextboxElement>) => void;
+    onMouseUp?: (e: React.MouseEvent<TextboxElement>) => void;
+    onKeyUp?: (e: React.KeyboardEvent<TextboxElement>) => void;
+    onBlur?: (e: FocusEvent<TextboxElement>) => void;
     supportsCommands: boolean;
     handlePostError?: (message: JSX.Element | null) => void;
+    onPaste?: (e: ClipboardEvent) => void;
     suggestionList?: React.ComponentProps<typeof SuggestionBox>['listComponent'];
     suggestionListPosition?: React.ComponentProps<typeof SuggestionList>['position'];
     emojiEnabled?: boolean;
@@ -50,7 +54,6 @@ type Props = {
     currentUserId: string;
     currentTeamId: string;
     preview?: boolean;
-    profilesInChannel: Array<{ id: string }>;
     autocompleteGroups: Array<{ id: string }> | null;
     actions: {
         autocompleteUsersInChannel: (prefix: string, channelId: string | undefined) => (dispatch: any, getState: any) => Promise<string[]>;
@@ -64,10 +67,10 @@ type Props = {
 };
 
 export default class Textbox extends React.PureComponent<Props> {
-    private suggestionProviders: Provider[];
-    private wrapper: React.RefObject<HTMLDivElement>;
-    private message: React.RefObject<SuggestionBox>;
-    private preview: React.RefObject<HTMLDivElement>;
+    private readonly suggestionProviders: Provider[];
+    private readonly wrapper: React.RefObject<HTMLDivElement>;
+    private readonly message: React.RefObject<SuggestionBoxComponent>;
+    private readonly preview: React.RefObject<HTMLDivElement>;
 
     static defaultProps = {
         supportsCommands: true,
@@ -93,7 +96,7 @@ export default class Textbox extends React.PureComponent<Props> {
         this.suggestionProviders.push(
             new AtMentionProvider({
                 currentUserId: this.props.currentUserId,
-                profilesInChannel: this.props.profilesInChannel,
+                channelId: this.props.channelId,
                 autocompleteUsersInChannel: (prefix: string) => this.props.actions.autocompleteUsersInChannel(prefix, this.props.channelId),
                 useChannelMentions: this.props.useChannelMentions,
                 autocompleteGroups: this.props.autocompleteGroups,
@@ -125,7 +128,6 @@ export default class Textbox extends React.PureComponent<Props> {
     updateSuggestions(prevProps: Props) {
         if (this.props.channelId !== prevProps.channelId ||
             this.props.currentUserId !== prevProps.currentUserId ||
-            this.props.profilesInChannel !== prevProps.profilesInChannel ||
             this.props.autocompleteGroups !== prevProps.autocompleteGroups ||
             this.props.useChannelMentions !== prevProps.useChannelMentions ||
             this.props.currentTeamId !== prevProps.currentTeamId ||
@@ -135,7 +137,7 @@ export default class Textbox extends React.PureComponent<Props> {
                 if (provider instanceof AtMentionProvider) {
                     provider.setProps({
                         currentUserId: this.props.currentUserId,
-                        profilesInChannel: this.props.profilesInChannel,
+                        channelId: this.props.channelId,
                         autocompleteUsersInChannel: (prefix: string) => this.props.actions.autocompleteUsersInChannel(prefix, this.props.channelId),
                         useChannelMentions: this.props.useChannelMentions,
                         autocompleteGroups: this.props.autocompleteGroups,
@@ -200,24 +202,22 @@ export default class Textbox extends React.PureComponent<Props> {
         }
     }
 
-    handleKeyDown = (e: KeyboardEvent) => {
-        this.props.onKeyDown?.(e);
+    // adding in the HTMLDivElement to support event handling in preview state
+    handleKeyDown = (e: KeyboardEvent<TextboxElement | HTMLDivElement>) => {
+        // since we do only handle the sending when in preview mode this is fine to be casted
+        this.props.onKeyDown?.(e as KeyboardEvent<TextboxElement>);
     }
 
-    handleSelect = (e: React.SyntheticEvent) => {
-        this.props.onSelect?.(e);
-    }
+    handleSelect = (e: React.SyntheticEvent<TextboxElement>) => this.props.onSelect?.(e);
 
-    handleMouseUp = (e: MouseEvent) => {
-        this.props.onMouseUp?.(e);
-    }
+    handleMouseUp = (e: MouseEvent<TextboxElement>) => this.props.onMouseUp?.(e);
 
-    handleKeyUp = (e: KeyboardEvent) => {
-        this.props.onKeyUp?.(e);
-    }
+    handleKeyUp = (e: KeyboardEvent<TextboxElement>) => this.props.onKeyUp?.(e);
 
-    handleBlur = (e: FocusEvent) => {
-        this.props.onBlur?.(e);
+    // adding in the HTMLDivElement to support event handling in preview state
+    handleBlur = (e: FocusEvent<TextboxElement | HTMLDivElement>) => {
+        // since we do only handle the sending when in preview mode this is fine to be casted
+        this.props.onBlur?.(e as FocusEvent<TextboxElement>);
     }
 
     handleHeightChange = (height: number, maxHeight: number) => {
@@ -233,6 +233,9 @@ export default class Textbox extends React.PureComponent<Props> {
         if (textbox) {
             textbox.focus();
             Utils.placeCaretAtEnd(textbox);
+            setTimeout(() => {
+                Utils.scrollToCaret(textbox);
+            });
 
             // reset character count warning
             this.checkMessageLength(textbox.value);
@@ -243,24 +246,16 @@ export default class Textbox extends React.PureComponent<Props> {
         this.getInputBox()?.blur();
     };
 
-    recalculateSize = () => {
-        this.message.current?.recalculateSize();
-    }
-
     render() {
         let preview = null;
 
         let textboxClassName = 'form-control custom-textarea';
         let textWrapperClass = 'textarea-wrapper';
-        let wrapperHeight;
         if (this.props.emojiEnabled) {
             textboxClassName += ' custom-textarea--emoji-picker';
         }
         if (this.props.badConnection) {
             textboxClassName += ' bad-connection';
-        }
-        if (this.wrapper.current) {
-            wrapperHeight = this.getInputBox()?.clientHeight;
         }
         if (this.props.preview) {
             textboxClassName += ' custom-textarea--preview';
@@ -273,7 +268,6 @@ export default class Textbox extends React.PureComponent<Props> {
                     className='form-control custom-textarea textbox-preview-area'
                     onKeyPress={this.props.onKeyPress}
                     onKeyDown={this.handleKeyDown}
-                    onSelect={this.handleSelect}
                     onBlur={this.handleBlur}
                 >
                     <PostMarkdown
@@ -306,6 +300,7 @@ export default class Textbox extends React.PureComponent<Props> {
                     onComposition={this.props.onComposition}
                     onBlur={this.handleBlur}
                     onHeightChange={this.handleHeightChange}
+                    onPaste={this.props.onPaste}
                     style={{visibility: this.props.preview ? 'hidden' : 'visible'}}
                     inputComponent={this.props.inputComponent}
                     listComponent={this.props.suggestionList}
@@ -313,12 +308,11 @@ export default class Textbox extends React.PureComponent<Props> {
                     providers={this.suggestionProviders}
                     channelId={this.props.channelId}
                     value={this.props.value}
-                    renderDividers={true}
+                    renderDividers={['all']}
                     isRHS={this.props.isRHS}
                     disabled={this.props.disabled}
                     contextId={this.props.channelId}
                     listenForMentionKeyClick={this.props.listenForMentionKeyClick}
-                    wrapperHeight={wrapperHeight}
                     openWhenEmpty={this.props.openWhenEmpty}
                 />
                 {preview}

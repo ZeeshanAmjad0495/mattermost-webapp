@@ -2,7 +2,6 @@
 // See LICENSE.txt for license information.
 
 import React from 'react';
-import {Tooltip} from 'react-bootstrap';
 import {injectIntl, IntlShape} from 'react-intl';
 import {Link} from 'react-router-dom';
 import {Draggable} from 'react-beautiful-dnd';
@@ -11,9 +10,10 @@ import classNames from 'classnames';
 import {mark, trackEvent} from 'actions/telemetry_actions.jsx';
 import Constants from 'utils/constants';
 import {isDesktopApp} from 'utils/user_agent';
-import {localizeMessage} from 'utils/utils.jsx';
+import {localizeMessage} from 'utils/utils';
 import CopyUrlContextMenu from 'components/copy_url_context_menu';
 import OverlayTrigger from 'components/overlay_trigger';
+import Tooltip from 'components/tooltip';
 import TeamIcon from '../../widgets/team_icon/team_icon';
 import KeyboardShortcutSequence, {
     KEYBOARD_SHORTCUTS,
@@ -38,6 +38,7 @@ interface Props {
     isDraggable?: boolean;
     teamIndex?: number;
     teamId?: string;
+    isInProduct?: boolean;
 }
 
 // eslint-disable-next-line react/require-optimization
@@ -154,7 +155,7 @@ class TeamButton extends React.PureComponent<Props> {
                 }
             >
                 <div className={'team-btn ' + btnClass}>
-                    {badge}
+                    {!this.props.isInProduct && badge}
                     {content}
                 </div>
             </OverlayTrigger>

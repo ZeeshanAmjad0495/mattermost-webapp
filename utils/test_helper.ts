@@ -1,17 +1,18 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
-import {Channel, ChannelMembership, ChannelNotifyProps, ChannelWithTeamData} from 'mattermost-redux/types/channels';
-import {Bot} from 'mattermost-redux/types/bots';
-import {Role} from 'mattermost-redux/types/roles';
-import {UserProfile, UserAccessToken} from 'mattermost-redux/types/users';
-import {Team, TeamMembership} from 'mattermost-redux/types/teams';
-import {Group} from 'mattermost-redux/types/groups';
-import {FileInfo} from 'mattermost-redux/types/files';
-import {Post} from 'mattermost-redux/types/posts';
-import {CategorySorting, ChannelCategory} from 'mattermost-redux/types/channel_categories';
-import {Command, IncomingWebhook} from 'mattermost-redux/types/integrations';
+import {Channel, ChannelMembership, ChannelNotifyProps, ChannelWithTeamData} from '@mattermost/types/channels';
+import {Bot} from '@mattermost/types/bots';
+import {Role} from '@mattermost/types/roles';
+import {UserProfile, UserAccessToken} from '@mattermost/types/users';
+import {Team, TeamMembership} from '@mattermost/types/teams';
+import {Group} from '@mattermost/types/groups';
+import {FileInfo} from '@mattermost/types/files';
+import {Post} from '@mattermost/types/posts';
+import {CategorySorting, ChannelCategory} from '@mattermost/types/channel_categories';
+import {Command, IncomingWebhook} from '@mattermost/types/integrations';
 import {CategoryTypes} from 'mattermost-redux/constants/channel_categories';
-import {Session} from 'mattermost-redux/types/sessions';
+import {CustomEmoji} from '@mattermost/types/emojis';
+import {Session} from '@mattermost/types/sessions';
 import {ProductComponent} from 'types/store/plugins';
 
 export class TestHelper {
@@ -147,7 +148,7 @@ export class TestHelper {
         return Object.assign({}, defaultCategory, override);
     }
 
-    public static getChannelMembershipMock(override: Partial<ChannelMembership>, overrideNotifyProps: Partial<ChannelNotifyProps>): ChannelMembership {
+    public static getChannelMembershipMock(override: Partial<ChannelMembership>, overrideNotifyProps?: Partial<ChannelNotifyProps>): ChannelMembership {
         const defaultNotifyProps = {
             desktop: 'default',
             email: 'default',
@@ -234,7 +235,7 @@ export class TestHelper {
             name: 'group_name',
             display_name: 'group_display_name',
             description: '',
-            type: '',
+            source: '',
             remote_id: '',
             create_at: 1,
             update_at: 1,
@@ -294,7 +295,7 @@ export class TestHelper {
         return Object.assign({}, defaultPost, override);
     }
 
-    public static getFileInfoMock(override: Partial<FileInfo>): FileInfo {
+    public static getFileInfoMock(override: Partial<FileInfo> = {}): FileInfo {
         const defaultFileInfo: FileInfo = {
             id: 'file_info_id',
             user_id: 'user_id',
@@ -362,9 +363,23 @@ export class TestHelper {
             switcherText: name,
             baseURL: '',
             switcherLinkURL: '',
-            mainComponent: null,
-            headerCentreComponent: null,
-            headerRightComponent: null,
+            mainComponent: () => null,
+            headerCentreComponent: () => null,
+            headerRightComponent: () => null,
+            showTeamSidebar: false,
+        };
+    }
+
+    public static getCustomEmojiMock(override: Partial<CustomEmoji>): CustomEmoji {
+        return {
+            id: 'emoji_id',
+            name: 'emoji',
+            category: 'custom',
+            create_at: 0,
+            update_at: 0,
+            delete_at: 0,
+            creator_id: 'user_id',
+            ...override,
         };
     }
 }

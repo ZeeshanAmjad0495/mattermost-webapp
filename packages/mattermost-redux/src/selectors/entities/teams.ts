@@ -8,10 +8,10 @@ import {Permissions} from 'mattermost-redux/constants';
 import {getConfig, getCurrentUrl, isCompatibleWithJoinViewTeamPermissions} from 'mattermost-redux/selectors/entities/general';
 import {haveISystemPermission} from 'mattermost-redux/selectors/entities/roles_helpers';
 
-import {GlobalState} from 'mattermost-redux/types/store';
-import {Team, TeamMembership, TeamStats} from 'mattermost-redux/types/teams';
-import {UserProfile} from 'mattermost-redux/types/users';
-import {$ID, IDMappedObjects, RelationOneToOne} from 'mattermost-redux/types/utilities';
+import {GlobalState} from '@mattermost/types/store';
+import {Team, TeamMembership, TeamStats} from '@mattermost/types/teams';
+import {UserProfile} from '@mattermost/types/users';
+import {IDMappedObjects, RelationOneToOne} from '@mattermost/types/utilities';
 
 import {createIdsSelector} from 'mattermost-redux/utils/helpers';
 import {isTeamAdmin} from 'mattermost-redux/utils/user_utils';
@@ -76,6 +76,14 @@ export const getTeamsList: (state: GlobalState) => Team[] = createSelector(
     getTeams,
     (teams) => {
         return Object.values(teams);
+    },
+);
+
+export const getActiveTeamsList: (state: GlobalState) => Team[] = createSelector(
+    'getActiveTeamsList',
+    getTeamsList,
+    (teams) => {
+        return teams.filter((team) => team.delete_at === 0);
     },
 );
 
@@ -158,6 +166,15 @@ export const getMyTeams: (state: GlobalState) => Team[] = createSelector(
     },
 );
 
+export const getMyDeletedTeams: (state: GlobalState) => Team[] = createSelector(
+    'getMyDeletedTeams',
+    getTeams,
+    getTeamMemberships,
+    (teams, members) => {
+        return Object.values(teams).filter((t) => members[t.id] && t.delete_at !== 0);
+    },
+);
+
 export const getMyTeamMember: (state: GlobalState, teamId: string) => TeamMembership = createSelector(
     'getMyTeamMember',
     getTeamMemberships,
@@ -185,7 +202,7 @@ export function getTeamMember(state: GlobalState, teamId: string, userId: string
     return null;
 }
 
-export const getListableTeamIds: (state: GlobalState) => Array<$ID<Team>> = createIdsSelector(
+export const getListableTeamIds: (state: GlobalState) => Array<Team['id']> = createIdsSelector(
     'getListableTeamIds',
     getTeams,
     getTeamMemberships,
@@ -230,7 +247,7 @@ export const getSortedListableTeams: (state: GlobalState, locale: string) => Tea
     },
 );
 
-export const getJoinableTeamIds: (state: GlobalState) => Array<$ID<Team>> = createIdsSelector(
+export const getJoinableTeamIds: (state: GlobalState) => Array<Team['id']> = createIdsSelector(
     'getJoinableTeamIds',
     getTeams,
     getTeamMemberships,
@@ -275,7 +292,7 @@ export const getSortedJoinableTeams: (state: GlobalState, locale: string) => Tea
     },
 );
 
-export const getMySortedTeamIds: (state: GlobalState, locale: string) => Array<$ID<Team>> = createIdsSelector(
+export const getMySortedTeamIds: (state: GlobalState, locale: string) => Array<Team['id']> = createIdsSelector(
     'getMySortedTeamIds',
     getMyTeams,
     (state: GlobalState, locale: string) => locale,

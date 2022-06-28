@@ -1,18 +1,15 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
-
 /* eslint-disable max-lines */
 
-import React from 'react';
+import React, {CSSProperties, SyntheticEvent} from 'react';
 import classNames from 'classnames';
 import {injectIntl, IntlShape} from 'react-intl';
 
 import {Posts} from 'mattermost-redux/constants';
-import {PrewrittenMessagesTreatments} from 'mattermost-redux/constants/config';
 import {sortFileInfos} from 'mattermost-redux/utils/file_utils';
 
 import * as GlobalActions from 'actions/global_actions';
-import {trackEvent} from 'actions/telemetry_actions.jsx';
 import Constants, {StoragePrefixes, ModalIdentifiers, Locations, A11yClassNames} from 'utils/constants';
 import {t} from 'utils/i18n';
 import {
@@ -26,7 +23,7 @@ import {
 } from 'utils/post_utils';
 import {getTable, formatMarkdownTableMessage, formatGithubCodePaste, isGitHubCodeBlock} from 'utils/paste';
 import * as UserAgent from 'utils/user_agent';
-import * as Utils from 'utils/utils.jsx';
+import * as Utils from 'utils/utils';
 
 import NotifyConfirmModal from 'components/notify_confirm_modal';
 import EditChannelHeaderModal from 'components/edit_channel_header_modal';
@@ -35,35 +32,30 @@ import EmojiPickerOverlay from 'components/emoji_picker/emoji_picker_overlay.jsx
 import FilePreview from 'components/file_preview';
 import FileUpload from 'components/file_upload';
 import {FileUpload as FileUploadClass} from 'components/file_upload/file_upload';
-import CallButton from 'components/call_button';
 import LocalizedIcon from 'components/localized_icon';
 import MsgTyping from 'components/msg_typing';
-import PostDeletedModal from 'components/post_deleted_modal';
 import ResetStatusModal from 'components/reset_status_modal';
 import EmojiIcon from 'components/widgets/icons/emoji_icon';
-import Textbox from 'components/textbox';
+import Textbox, {TextboxElement} from 'components/textbox';
 import TextboxClass from 'components/textbox/textbox';
 import TextboxLinks from 'components/textbox/textbox_links';
 
-import FormattedMarkdownMessage from 'components/formatted_markdown_message.jsx';
 import MessageSubmitError from 'components/message_submit_error';
-import {Channel, ChannelMemberCountsByGroup} from 'mattermost-redux/types/channels';
+import {Channel, ChannelMemberCountsByGroup} from '@mattermost/types/channels';
 import {PostDraft} from 'types/store/rhs';
-import {Post, PostMetadata} from 'mattermost-redux/types/posts';
-import {PreferenceType} from 'mattermost-redux/types/preferences';
+import {Post, PostMetadata} from '@mattermost/types/posts';
+import {PreferenceType} from '@mattermost/types/preferences';
 import EmojiMap from 'utils/emoji_map';
 import {ActionResult} from 'mattermost-redux/types/actions';
-import {ServerError} from 'mattermost-redux/types/errors';
-import {CommandArgs} from 'mattermost-redux/types/integrations';
-import {Group} from 'mattermost-redux/types/groups';
+import {ServerError} from '@mattermost/types/errors';
+import {CommandArgs} from '@mattermost/types/integrations';
+import {Group} from '@mattermost/types/groups';
 import {ModalData} from 'types/actions';
-import {FileInfo} from 'mattermost-redux/types/files';
-import {Emoji} from 'mattermost-redux/types/emojis';
+import {FileInfo} from '@mattermost/types/files';
+import {Emoji} from '@mattermost/types/emojis';
 import {FilePreviewInfo} from 'components/file_preview/file_preview';
-
-import CreatePostTip from './create_post_tip';
-import PrewrittenChips from './prewritten_chips';
-
+import {SendMessageTour} from 'components/onboarding_tour';
+import {ApplyMarkdownOptions, applyMarkdown} from 'utils/markdown/apply_markdown';
 const KeyCodes = Constants.KeyCodes;
 
 const CreatePostDraftTimeoutMilliseconds = 500;
@@ -80,250 +72,236 @@ function trimRight(str: string) {
 type Props = {
 
     /**
-         *  ref passed from channelView for EmojiPickerOverlay
-         */
+     *  ref passed from channelView for EmojiPickerOverlay
+     */
     getChannelView?: () => void;
 
     /**
-  *  Data used in notifying user for @all and @channel
-  */
+     *  Data used in notifying user for @all and @channel
+     */
     currentChannelMembersCount: number;
 
     /**
-  *  Data used in multiple places of the component
-  */
+     *  Data used in multiple places of the component
+     */
     currentChannel: Channel;
 
     /**
-  *  Data used for DM prewritten messages
-  */
+     *  Data used for DM prewritten messages
+     */
     currentChannelTeammateUsername?: string;
 
     /**
-  *  Data used in executing commands for channel actions passed down to client4 function
-  */
+     *  Data used in executing commands for channel actions passed down to client4 function
+     */
     currentTeamId: string;
 
     /**
-  *  Data used for posting message
-  */
+     *  Data used for posting message
+     */
     currentUserId: string;
 
     /**
-  * Force message submission on CTRL/CMD + ENTER
-  */
+     * Force message submission on CTRL/CMD + ENTER
+     */
     codeBlockOnCtrlEnter?: boolean;
 
     /**
-  *  Flag used for handling submit
-  */
+     *  Flag used for handling submit
+     */
     ctrlSend?: boolean;
 
     /**
-  *  Flag used for adding a class center to Postbox based on user pref
-  */
+     *  Flag used for adding a class center to Postbox based on user pref
+     */
     fullWidthTextBox?: boolean;
 
     /**
-  *  Data used for deciding if tutorial tip is to be shown
-  */
-    showTutorialTip: boolean;
+     *  Data used for deciding if tutorial tip is to be shown
+     */
+    showSendTutorialTip: boolean;
 
     /**
-  *  Data used for advancing from create post tip
-  */
-    tutorialStep: number;
-
-    /**
-  *  A/B test treatments for presenting prewritten messages to first time users
-  */
-    prewrittenMessages?: PrewrittenMessagesTreatments;
-
-    /**
-  *  Data used populating message state when triggered by shortcuts
-  */
+     *  Data used populating message state when triggered by shortcuts
+     */
     messageInHistoryItem?: string;
 
     /**
-  *  Data used for populating message state from previous draft
-  */
+     *  Data used for populating message state from previous draft
+     */
     draft: PostDraft;
 
     /**
-  *  Data used dispatching handleViewAction ex: edit post
-  */
+     *  Data used dispatching handleViewAction ex: edit post
+     */
     latestReplyablePostId?: string;
     locale: string;
 
     /**
-  *  Data used for calling edit of post
-  */
+     *  Data used for calling edit of post
+     */
     currentUsersLatestPost?: Post | null;
 
     /**
-  * Whether or not file upload is allowed.
-  */
+     * Whether or not file upload is allowed.
+     */
     canUploadFiles: boolean;
 
     /**
-  * Whether to show the emoji picker.
-  */
+     * Whether to show the emoji picker.
+     */
     enableEmojiPicker: boolean;
 
     /**
-  * Whether to show the gif picker.
-  */
+     * Whether to show the gif picker.
+     */
     enableGifPicker: boolean;
 
     /**
-  * Whether to check with the user before notifying the whole channel.
-  */
+     * Whether to check with the user before notifying the whole channel.
+     */
     enableConfirmNotificationsToChannel: boolean;
 
     /**
-  * The maximum length of a post
-  */
+     * The maximum length of a post
+     */
     maxPostSize: number;
     emojiMap: EmojiMap;
 
     /**
-  * If our connection is bad
-  */
+     * If our connection is bad
+     */
     badConnection: boolean;
 
     /**
-  * Whether to display a confirmation modal to reset status.
-  */
+     * Whether to display a confirmation modal to reset status.
+     */
     userIsOutOfOffice: boolean;
     rhsExpanded: boolean;
 
     /**
-  * To check if the timezones are enable on the server.
-  */
+     * To check if the timezones are enable on the server.
+     */
     isTimezoneEnabled: boolean;
 
     canPost: boolean;
 
     /**
-  * To determine if the current user can send special channel mentions
-  */
+     * To determine if the current user can send special channel mentions
+     */
     useChannelMentions: boolean;
 
     intl: IntlShape;
 
     /**
-  * Should preview be showed
-  */
+     * Should preview be showed
+     */
     shouldShowPreview: boolean;
 
     actions: {
 
         /**
-      * Set show preview for textbox
-      */
+         * Set show preview for textbox
+         */
         setShowPreview: (showPreview: boolean) => void;
 
         /**
-      *  func called after message submit.
-      */
+         *  func called after message submit.
+         */
         addMessageIntoHistory: (message: string) => void;
 
         /**
-      *  func called for navigation through messages by Up arrow
-      */
+         *  func called for navigation through messages by Up arrow
+         */
         moveHistoryIndexBack: (index: string) => Promise<void>;
 
         /**
-      *  func called for navigation through messages by Down arrow
-      */
+         *  func called for navigation through messages by Down arrow
+         */
         moveHistoryIndexForward: (index: string) => Promise<void>;
 
         /**
-      *  func called for adding a reaction
-      */
+         *  func called for adding a reaction
+         */
         addReaction: (postId: string, emojiName: string) => void;
 
         /**
-      *  func called for posting message
-      */
+         *  func called for posting message
+         */
         onSubmitPost: (post: Post, fileInfos: FileInfo[]) => void;
 
         /**
-      *  func called for removing a reaction
-      */
+         *  func called for removing a reaction
+         */
         removeReaction: (postId: string, emojiName: string) => void;
 
         /**
-      *  func called on load of component to clear drafts
-      */
+         *  func called on load of component to clear drafts
+         */
         clearDraftUploads: () => void;
 
         /**
-      * hooks called before a message is sent to the server
-      */
+         * hooks called before a message is sent to the server
+         */
         runMessageWillBePostedHooks: (originalPost: Post) => ActionResult;
 
         /**
-      * hooks called before a slash command is sent to the server
-      */
+         * hooks called before a slash command is sent to the server
+         */
         runSlashCommandWillBePostedHooks: (originalMessage: string, originalArgs: CommandArgs) => ActionResult;
 
         /**
-      *  func called for setting drafts
-      */
+         *  func called for setting drafts
+         */
         setDraft: (name: string, value: PostDraft | null) => void;
 
         /**
-      *  func called for editing posts
-      */
+         *  func called for editing posts
+         */
         setEditingPost: (postId?: string, refocusId?: string, title?: string, isRHS?: boolean) => void;
 
         /**
-      *  func called for opening the last replayable post in the RHS
-      */
+         *  func called for opening the last replayable post in the RHS
+         */
         selectPostFromRightHandSideSearchByPostId: (postId: string) => void;
 
         /**
-      * Function to open a modal
-      */
-        openModal: (modalData: ModalData) => void;
-
-        /**
-      * Function to close a modal
-      */
-        closeModal: (modalId: string) => void;
+         * Function to open a modal
+         */
+        openModal: <P>(modalData: ModalData<P>) => void;
 
         executeCommand: (message: string, args: CommandArgs) => ActionResult;
 
         /**
-      * Function to get the users timezones in the channel
-      */
+         * Function to get the users timezones in the channel
+         */
         getChannelTimezones: (channelId: string) => ActionResult;
         scrollPostListToBottom: () => void;
 
         /**
-      * Function to set or unset emoji picker for last message
-      */
+         * Function to set or unset emoji picker for last message
+         */
         emitShortcutReactToLastPostFrom: (emittedFrom: string) => void;
 
         getChannelMemberCountsByGroup: (channelId: string, includeTimezones: boolean) => void;
 
         /**
-      * Function used to advance the tutorial forward
-      */
+         * Function used to advance the tutorial forward
+         */
         savePreferences: (userId: string, preferences: PreferenceType[]) => ActionResult;
     };
 
     groupsWithAllowReference: Map<string, Group> | null;
     channelMemberCountsByGroup: ChannelMemberCountsByGroup;
-    useGroupMentions: boolean;
+    useLDAPGroupMentions: boolean;
+    useCustomGroupMentions: boolean;
+    markdownPreviewFeatureIsEnabled: boolean;
 }
 
 type State = {
     message: string;
     caretPosition: number;
     submitting: boolean;
-    showPostDeletedModal: boolean;
     showEmojiPicker: boolean;
     uploadsProgressPercent: {[clientID: string]: FilePreviewInfo};
     renderScrollbar: boolean;
@@ -369,7 +347,6 @@ class CreatePost extends React.PureComponent<Props, State> {
             message: this.props.draft.message,
             caretPosition: this.props.draft.message.length,
             submitting: false,
-            showPostDeletedModal: false,
             showEmojiPicker: false,
             uploadsProgressPercent: {},
             renderScrollbar: false,
@@ -386,7 +363,7 @@ class CreatePost extends React.PureComponent<Props, State> {
     }
 
     componentDidMount() {
-        const {useGroupMentions, currentChannel, isTimezoneEnabled, actions} = this.props;
+        const {useLDAPGroupMentions, currentChannel, isTimezoneEnabled, actions} = this.props;
         this.onOrientationChange();
         actions.setShowPreview(false);
         actions.clearDraftUploads();
@@ -396,18 +373,18 @@ class CreatePost extends React.PureComponent<Props, State> {
         window.addEventListener('beforeunload', this.unloadHandler);
         this.setOrientationListeners();
 
-        if (useGroupMentions) {
+        if (useLDAPGroupMentions) {
             actions.getChannelMemberCountsByGroup(currentChannel.id, isTimezoneEnabled);
         }
     }
 
     componentDidUpdate(prevProps: Props, prevState: State) {
-        const {useGroupMentions, currentChannel, isTimezoneEnabled, actions} = this.props;
+        const {useLDAPGroupMentions, currentChannel, isTimezoneEnabled, actions} = this.props;
         if (prevProps.currentChannel.id !== currentChannel.id) {
             this.lastChannelSwitchAt = Date.now();
             this.focusTextbox();
             this.saveDraft(prevProps);
-            if (useGroupMentions) {
+            if (useLDAPGroupMentions) {
                 actions.getChannelMemberCountsByGroup(currentChannel.id, isTimezoneEnabled);
             }
         }
@@ -425,7 +402,7 @@ class CreatePost extends React.PureComponent<Props, State> {
     componentWillUnmount() {
         document.removeEventListener('paste', this.pasteHandler);
         document.removeEventListener('keydown', this.documentKeyHandler);
-        window.addEventListener('beforeunload', this.unloadHandler);
+        window.removeEventListener('beforeunload', this.unloadHandler);
         this.removeOrientationListeners();
         this.saveDraft();
     }
@@ -603,31 +580,21 @@ class CreatePost extends React.PureComponent<Props, State> {
 
         this.props.actions.setDraft(StoragePrefixes.DRAFT + channelId, null);
         this.draftsForChannel[channelId] = null;
-
-        // Posting a message completes the tip when there are prewritten messages.
-        // We do not complete messages in the control group,
-        // so as to not alter behavior in the control group as a result of the A/B test code changes.
-        const shouldCompleteTip = this.props.tutorialStep === Constants.TutorialSteps.POST_POPOVER && this.props.prewrittenMessages && this.props.prewrittenMessages !== PrewrittenMessagesTreatments.NONE;
-        if (shouldCompleteTip) {
-            this.completePostTip('send_message');
-        }
     }
 
     handleNotifyAllConfirmation = () => {
-        this.props.actions.closeModal(ModalIdentifiers.NOTIFY_CONFIRM_MODAL);
         this.doSubmit();
     }
 
     showNotifyAllModal = (mentions: string[], channelTimezoneCount: number, memberNotifyCount: number) => {
         this.props.actions.openModal({
             modalId: ModalIdentifiers.NOTIFY_CONFIRM_MODAL,
-            dialogType: NotifyConfirmModal as any,
+            dialogType: NotifyConfirmModal,
             dialogProps: {
                 mentions,
                 channelTimezoneCount,
                 memberNotifyCount,
                 onConfirm: () => this.handleNotifyAllConfirmation(),
-                onCancel: () => this.props.actions.closeModal(ModalIdentifiers.NOTIFY_CONFIRM_MODAL),
             },
         });
     }
@@ -654,7 +621,8 @@ class CreatePost extends React.PureComponent<Props, State> {
             groupsWithAllowReference,
             channelMemberCountsByGroup,
             currentChannelMembersCount,
-            useGroupMentions,
+            useLDAPGroupMentions,
+            useCustomGroupMentions,
         } = this.props;
 
         const notificationsToChannel = this.props.enableConfirmNotificationsToChannel && this.props.useChannelMentions;
@@ -665,18 +633,24 @@ class CreatePost extends React.PureComponent<Props, State> {
         const specialMentions = specialMentionsInText(this.state.message);
         const hasSpecialMentions = Object.values(specialMentions).includes(true);
 
-        if (this.props.enableConfirmNotificationsToChannel && !hasSpecialMentions && useGroupMentions) {
+        if (this.props.enableConfirmNotificationsToChannel && !hasSpecialMentions && (useLDAPGroupMentions || useCustomGroupMentions)) {
             // Groups mentioned in users text
             const mentionGroups = groupsMentionedInText(this.state.message, groupsWithAllowReference);
             if (mentionGroups.length > 0) {
-                mentions = mentionGroups.
-                    map((group) => {
+                mentionGroups.
+                    forEach((group) => {
+                        if (group.source === 'ldap' && !useLDAPGroupMentions) {
+                            return;
+                        }
+                        if (group.source === 'custom' && !useCustomGroupMentions) {
+                            return;
+                        }
                         const mappedValue = channelMemberCountsByGroup[group.id];
                         if (mappedValue && mappedValue.channel_member_count > Constants.NOTIFY_ALL_MEMBERS && mappedValue.channel_member_count > memberNotifyCount) {
                             memberNotifyCount = mappedValue.channel_member_count;
                             channelTimezoneCount = mappedValue.channel_member_timezones_count;
                         }
-                        return `@${group.name}`;
+                        mentions.push(`@${group.name}`);
                     });
                 mentions = [...new Set(mentions)];
             }
@@ -708,7 +682,7 @@ class CreatePost extends React.PureComponent<Props, State> {
         if (userIsOutOfOffice && this.isStatusSlashCommand(status)) {
             const resetStatusModalData = {
                 modalId: ModalIdentifiers.RESET_STATUS,
-                dialogType: ResetStatusModal as any,
+                dialogType: ResetStatusModal,
                 dialogProps: {newStatus: status},
             };
 
@@ -721,7 +695,7 @@ class CreatePost extends React.PureComponent<Props, State> {
         if (trimRight(this.state.message) === '/header') {
             const editChannelHeaderModalData = {
                 modalId: ModalIdentifiers.EDIT_CHANNEL_HEADER,
-                dialogType: EditChannelHeaderModal as any,
+                dialogType: EditChannelHeaderModal,
                 dialogProps: {channel: updateChannel},
             };
 
@@ -735,18 +709,12 @@ class CreatePost extends React.PureComponent<Props, State> {
         if (!isDirectOrGroup && trimRight(this.state.message) === '/purpose') {
             const editChannelPurposeModalData = {
                 modalId: ModalIdentifiers.EDIT_CHANNEL_PURPOSE,
-                dialogType: EditChannelPurposeModal as any,
+                dialogType: EditChannelPurposeModal,
                 dialogProps: {channel: updateChannel},
             };
 
             this.props.actions.openModal(editChannelPurposeModalData);
 
-            this.setState({message: ''});
-            return;
-        }
-
-        if (!isDirectOrGroup && trimRight(this.state.message) === '/rename') {
-            GlobalActions.showChannelNameUpdateModal(updateChannel);
             this.setState({message: ''});
             return;
         }
@@ -760,9 +728,10 @@ class CreatePost extends React.PureComponent<Props, State> {
             currentChannel,
             currentUserId,
             draft,
-            useGroupMentions,
+            useLDAPGroupMentions,
             useChannelMentions,
             groupsWithAllowReference,
+            useCustomGroupMentions,
         } = this.props;
 
         let post = originalPost;
@@ -779,7 +748,7 @@ class CreatePost extends React.PureComponent<Props, State> {
         if (!useChannelMentions && containsAtChannel(post.message, {checkAllMentions: true})) {
             post.props.mentionHighlightDisabled = true;
         }
-        if (!useGroupMentions && groupsMentionedInText(post.message, groupsWithAllowReference)) {
+        if (!useLDAPGroupMentions && !useCustomGroupMentions && groupsMentionedInText(post.message, groupsWithAllowReference)) {
             post.props.disable_group_highlight = true;
         }
 
@@ -887,7 +856,7 @@ class CreatePost extends React.PureComponent<Props, State> {
         GlobalActions.emitLocalUserTypingEvent(channelId, '');
     }
 
-    handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    handleChange = (e: React.ChangeEvent<TextboxElement>) => {
         const message = e.target.value;
         const channelId = this.props.currentChannel.id;
 
@@ -931,7 +900,9 @@ class CreatePost extends React.PureComponent<Props, State> {
 
         let message = this.state.message;
         if (isGitHubCodeBlock(table.className)) {
-            const {formattedMessage, formattedCodeBlock} = formatGithubCodePaste(this.state.caretPosition, message, clipboardData);
+            const selectionStart = (e.target as any).selectionStart;
+            const selectionEnd = (e.target as any).selectionEnd;
+            const {formattedMessage, formattedCodeBlock} = formatGithubCodePaste({selectionStart, selectionEnd, message, clipboardData});
             const newCaretPosition = this.state.caretPosition + formattedCodeBlock.length;
             this.setMessageAndCaretPostion(formattedMessage, newCaretPosition);
             return;
@@ -1078,15 +1049,8 @@ class CreatePost extends React.PureComponent<Props, State> {
 
     documentKeyHandler = (e: KeyboardEvent) => {
         const ctrlOrMetaKeyPressed = e.ctrlKey || e.metaKey;
-        const shortcutModalKeyCombo = ctrlOrMetaKeyPressed && Utils.isKeyPressed(e, KeyCodes.FORWARD_SLASH);
         const lastMessageReactionKeyCombo = ctrlOrMetaKeyPressed && e.shiftKey && Utils.isKeyPressed(e, KeyCodes.BACK_SLASH);
-
-        if (shortcutModalKeyCombo) {
-            e.preventDefault();
-
-            GlobalActions.toggleShortcutsModal();
-            return;
-        } else if (lastMessageReactionKeyCombo) {
+        if (lastMessageReactionKeyCombo) {
             this.reactToLastMessage(e);
             return;
         }
@@ -1100,11 +1064,7 @@ class CreatePost extends React.PureComponent<Props, State> {
     }
 
     getFileUploadTarget = () => {
-        if (this.textboxRef.current) {
-            return this.textboxRef.current;
-        }
-
-        return null;
+        return this.textboxRef.current?.getInputBox();
     }
 
     getCreatePostControls = () => {
@@ -1120,18 +1080,17 @@ class CreatePost extends React.PureComponent<Props, State> {
         }
     }
 
-    handleMouseUpKeyUp = (e: React.MouseEvent | React.KeyboardEvent) => {
-        const caretPosition = Utils.getCaretPosition(e.target as HTMLElement);
+    handleMouseUpKeyUp = (e: React.MouseEvent<TextboxElement> | React.KeyboardEvent<TextboxElement>) => {
         this.setState({
-            caretPosition,
+            caretPosition: e.currentTarget.selectionStart || 0,
         });
     }
 
-    handleSelect = (e: React.SyntheticEvent) => {
+    handleSelect = (e: SyntheticEvent<TextboxElement>) => {
         Utils.adjustSelection(this.textboxRef.current?.getInputBox(), e);
     }
 
-    handleKeyDown = (e: React.KeyboardEvent) => {
+    handleKeyDown = (e: React.KeyboardEvent<TextboxElement>) => {
         const ctrlOrMetaKeyPressed = e.ctrlKey || e.metaKey;
         const messageIsEmpty = this.state.message.length === 0;
         const draftMessageIsEmpty = this.props.draft.message.length === 0;
@@ -1139,13 +1098,18 @@ class CreatePost extends React.PureComponent<Props, State> {
         const upKeyOnly = !ctrlOrMetaKeyPressed && !e.altKey && !e.shiftKey && Utils.isKeyPressed(e, KeyCodes.UP);
         const shiftUpKeyCombo = !ctrlOrMetaKeyPressed && !e.altKey && e.shiftKey && Utils.isKeyPressed(e, KeyCodes.UP);
         const ctrlKeyCombo = Utils.cmdOrCtrlPressed(e) && !e.altKey && !e.shiftKey;
-        const markdownHotkey = Utils.isKeyPressed(e, KeyCodes.B) || Utils.isKeyPressed(e, KeyCodes.I);
         const ctrlAltCombo = Utils.cmdOrCtrlPressed(e, true) && e.altKey;
         const markdownLinkKey = Utils.isKeyPressed(e, KeyCodes.K);
 
+        const {
+            selectionStart,
+            selectionEnd,
+            value,
+        } = e.target as TextboxElement;
+
         // listen for line break key combo and insert new line character
         if (Utils.isUnhandledLineBreakKeyCombo(e)) {
-            this.setState({message: Utils.insertLineBreakFromKeyEvent(e)});
+            this.setState({message: Utils.insertLineBreakFromKeyEvent(e as React.KeyboardEvent<HTMLTextAreaElement>)});
         } else if (ctrlEnterKeyCombo) {
             this.postMsgKeyPress(e);
         } else if (upKeyOnly && messageIsEmpty) {
@@ -1156,8 +1120,27 @@ class CreatePost extends React.PureComponent<Props, State> {
             this.loadPrevMessage(e);
         } else if (ctrlKeyCombo && draftMessageIsEmpty && Utils.isKeyPressed(e, KeyCodes.DOWN)) {
             this.loadNextMessage(e);
-        } else if ((ctrlKeyCombo && markdownHotkey) || (ctrlAltCombo && markdownLinkKey)) {
-            this.applyHotkeyMarkdown(e);
+        } else if (ctrlAltCombo && markdownLinkKey) {
+            this.applyMarkdown({
+                markdownMode: 'link',
+                selectionStart,
+                selectionEnd,
+                message: value,
+            });
+        } else if (ctrlKeyCombo && Utils.isKeyPressed(e, KeyCodes.B)) {
+            this.applyMarkdown({
+                markdownMode: 'bold',
+                selectionStart,
+                selectionEnd,
+                message: value,
+            });
+        } else if (ctrlKeyCombo && Utils.isKeyPressed(e, KeyCodes.I)) {
+            this.applyMarkdown({
+                markdownMode: 'italic',
+                selectionStart,
+                selectionEnd,
+                message: value,
+            });
         }
     }
 
@@ -1203,8 +1186,8 @@ class CreatePost extends React.PureComponent<Props, State> {
         this.props.actions.moveHistoryIndexForward(Posts.MESSAGE_TYPES.POST).then(() => this.fillMessageFromHistory());
     }
 
-    applyHotkeyMarkdown = (e: React.KeyboardEvent) => {
-        const res = Utils.applyHotkeyMarkdown(e);
+    applyMarkdown = (params: ApplyMarkdownOptions) => {
+        const res = applyMarkdown(params);
 
         this.setState({
             message: res.message,
@@ -1232,18 +1215,6 @@ class CreatePost extends React.PureComponent<Props, State> {
 
     handleBlur = () => {
         this.lastBlurAt = Date.now();
-    }
-
-    showPostDeletedModal = () => {
-        this.setState({
-            showPostDeletedModal: true,
-        });
-    }
-
-    hidePostDeletedModal = () => {
-        this.setState({
-            showPostDeletedModal: false,
-        });
     }
 
     handleEmojiClose = () => {
@@ -1333,68 +1304,12 @@ class CreatePost extends React.PureComponent<Props, State> {
         });
     }
 
-    completePostTip = (source: string) => {
-        this.props.actions.savePreferences(
-            this.props.currentUserId,
-            [{
-                user_id: this.props.currentUserId,
-                category: Constants.Preferences.TUTORIAL_STEP,
-                name: this.props.currentUserId,
-                value: (Constants.TutorialSteps.POST_POPOVER + 1).toString(),
-            }],
-        );
-        trackEvent('ui', 'tutorial_tip_1_complete_' + source);
-    }
-
-    renderPrewrittenMessages() {
-        if (this.props.prewrittenMessages !== PrewrittenMessagesTreatments.AROUND_INPUT || this.props.tutorialStep !== Constants.TutorialSteps.POST_POPOVER) {
-            return null;
-        }
-
-        let id = t('create_post.prewritten.around_input.team');
-        let defaultMessage = '**Send your first message** to your team';
-        if (this.props.currentChannel.type === 'D') {
-            if (this.props.currentChannel.teammate_id === this.props.currentUserId) {
-                id = t('create_post.prewritten.around_input.self');
-                defaultMessage = '**Send your first message** to yourself';
-            } else {
-                id = t('create_post.prewritten.around_input.dm');
-                defaultMessage = '**Send your first message** to your teammate';
-            }
-        }
-        return (
-            <>
-                <div className='post-create-prewritten-title'>
-                    <FormattedMarkdownMessage
-                        id={id}
-                        defaultMessage={defaultMessage}
-                    />
-                    <button
-                        type='button'
-                        className='btn-icon'
-                        aria-label='Got it'
-                        onClick={() => this.completePostTip('close_prewritten_wrapper')}
-                    >
-                        <i className='icon icon-close'/>
-                    </button>
-                </div>
-                <PrewrittenChips
-                    prewrittenMessages={this.props.prewrittenMessages}
-                    prefillMessage={this.prefillMessage}
-                    currentChannel={this.props.currentChannel}
-                    currentUserId={this.props.currentUserId}
-                    currentChannelTeammateUsername={this.props.currentChannelTeammateUsername}
-                />
-            </>
-        );
-    }
-
     render() {
         const {
             currentChannel,
             draft,
             fullWidthTextBox,
-            showTutorialTip,
+            showSendTutorialTip,
             canPost,
         } = this.props;
         const readOnlyChannel = !canPost;
@@ -1436,11 +1351,10 @@ class CreatePost extends React.PureComponent<Props, State> {
             postFooterClassName += ' has-error';
         }
 
-        let tutorialTip = null;
-        if (showTutorialTip) {
-            tutorialTip = (
-                <CreatePostTip
-                    prewrittenMessages={this.props.prewrittenMessages}
+        let SendTutorialTip = null;
+        if (showSendTutorialTip) {
+            SendTutorialTip = (
+                <SendMessageTour
                     prefillMessage={this.prefillMessage}
                     currentChannel={this.props.currentChannel}
                     currentUserId={this.props.currentUserId}
@@ -1454,11 +1368,6 @@ class CreatePost extends React.PureComponent<Props, State> {
             centerClass = 'center';
         }
 
-        let prewrittenClass = '';
-        if (this.props.prewrittenMessages === PrewrittenMessagesTreatments.AROUND_INPUT && this.props.tutorialStep === Constants.TutorialSteps.POST_POPOVER) {
-            prewrittenClass = 'prewritten';
-        }
-
         let sendButtonClass = 'send-button theme';
         if (!this.shouldEnableSendButton()) {
             sendButtonClass += ' disabled';
@@ -1467,13 +1376,6 @@ class CreatePost extends React.PureComponent<Props, State> {
         let attachmentsDisabled = '';
         if (!this.props.canUploadFiles) {
             attachmentsDisabled = ' post-create--attachment-disabled';
-        }
-
-        let callButton;
-        if (!readOnlyChannel && !this.props.shouldShowPreview) {
-            callButton = (
-                <CallButton/>
-            );
         }
 
         let fileUpload;
@@ -1546,13 +1448,12 @@ class CreatePost extends React.PureComponent<Props, State> {
             <form
                 id='create_post'
                 ref={this.topDiv}
-                className={centerClass + prewrittenClass}
+                className={centerClass}
                 onSubmit={this.handleSubmit}
             >
-                {this.renderPrewrittenMessages()}
                 <div
                     className={'post-create' + attachmentsDisabled + scrollbarClass}
-                    style={this.state.renderScrollbar && this.state.scrollbarWidth ? {'--detected-scrollbar-width': `${this.state.scrollbarWidth}px`} as any : undefined}
+                    style={this.state.renderScrollbar && this.state.scrollbarWidth ? {'--detected-scrollbar-width': `${this.state.scrollbarWidth}px`} as CSSProperties : undefined}
                 >
                     <div className='post-create-body'>
                         <div
@@ -1591,7 +1492,6 @@ class CreatePost extends React.PureComponent<Props, State> {
                                 ref={this.createPostControlsRef}
                                 className='post-body__actions'
                             >
-                                {callButton}
                                 {fileUpload}
                                 {emojiPicker}
                                 <a
@@ -1614,7 +1514,7 @@ class CreatePost extends React.PureComponent<Props, State> {
                                 </a>
                             </span>
                         </div>
-                        {tutorialTip}
+                        {SendTutorialTip}
                     </div>
                     <div
                         id='postCreateFooter'
@@ -1627,10 +1527,11 @@ class CreatePost extends React.PureComponent<Props, State> {
                                 postId=''
                             />
                             <TextboxLinks
-                                characterLimit={this.props.maxPostSize}
+                                isMarkdownPreviewEnabled={this.props.canPost && this.props.markdownPreviewFeatureIsEnabled}
+                                hasExceededCharacterLimit={readOnlyChannel ? false : this.state.message.length > this.props.maxPostSize}
                                 showPreview={this.props.shouldShowPreview}
                                 updatePreview={this.setShowPreview}
-                                message={readOnlyChannel ? '' : this.state.message}
+                                hasText={readOnlyChannel ? false : this.state.message.length > 0}
                             />
                         </div>
                         <div>
@@ -1640,10 +1541,6 @@ class CreatePost extends React.PureComponent<Props, State> {
                         </div>
                     </div>
                 </div>
-                <PostDeletedModal
-                    show={this.state.showPostDeletedModal}
-                    onHide={this.hidePostDeletedModal}
-                />
             </form>
         );
     }

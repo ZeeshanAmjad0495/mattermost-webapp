@@ -10,24 +10,26 @@ import {Client4} from 'mattermost-redux/client';
 import {Permissions, Posts} from 'mattermost-redux/constants';
 
 import {getChannel} from 'mattermost-redux/selectors/entities/channels';
+import {getConfig} from 'mattermost-redux/selectors/entities/general';
 import {makeGetReactionsForPost} from 'mattermost-redux/selectors/entities/posts';
 import {get, isCollapsedThreadsEnabled} from 'mattermost-redux/selectors/entities/preferences';
 import {haveIChannelPermission} from 'mattermost-redux/selectors/entities/roles';
 import {getCurrentTeamId, getTeam} from 'mattermost-redux/selectors/entities/teams';
-import {makeGetDisplayName, getCurrentUserId, getUser} from 'mattermost-redux/selectors/entities/users';
+import {makeGetDisplayName, getCurrentUserId, getUser, UserMentionKey} from 'mattermost-redux/selectors/entities/users';
 
-import {Channel} from 'mattermost-redux/types/channels';
-import {ClientConfig, ClientLicense} from 'mattermost-redux/types/config';
-import {ServerError} from 'mattermost-redux/types/errors';
-import {Group} from 'mattermost-redux/types/groups';
-import {Post} from 'mattermost-redux/types/posts';
-import {Reaction} from 'mattermost-redux/types/reactions';
+import {Channel} from '@mattermost/types/channels';
+import {ClientConfig, ClientLicense} from '@mattermost/types/config';
+import {ServerError} from '@mattermost/types/errors';
+import {Group} from '@mattermost/types/groups';
+import {Post} from '@mattermost/types/posts';
+import {Reaction} from '@mattermost/types/reactions';
 
 import {getUserIdFromChannelName} from 'mattermost-redux/utils/channel_utils';
 import * as PostListUtils from 'mattermost-redux/utils/post_list';
 import {canEditPost as canEditPostRedux} from 'mattermost-redux/utils/post_utils';
 
 import {getEmojiMap} from 'selectors/emojis';
+import {getIsMobileView} from 'selectors/views/browser';
 
 import {GlobalState} from 'types/store';
 
@@ -115,7 +117,7 @@ export function shouldShowDotMenu(state: GlobalState, post: Post, channel: Chann
         return false;
     }
 
-    if (Utils.isMobile()) {
+    if (getIsMobileView(state)) {
         return true;
     }
 
@@ -132,6 +134,20 @@ export function shouldShowDotMenu(state: GlobalState, post: Post, channel: Chann
     }
 
     return false;
+}
+
+export function shouldShowActionsMenu(state: GlobalState, post: Post): boolean {
+    const config = getConfig(state);
+    const pluginsEnabled = config.PluginsEnabled === 'true';
+    if (!pluginsEnabled) {
+        return false;
+    }
+
+    if (isSystemMessage(post)) {
+        return false;
+    }
+
+    return true;
 }
 
 export function containsAtChannel(text: string, options?: {checkAllMentions: boolean}): boolean {
@@ -400,7 +416,7 @@ export function getLatestPostId(postIds: string[]): string {
 }
 
 export function makeCreateAriaLabelForPost(): (state: GlobalState, post: Post) => (intl: IntlShape) => string {
-    const getReactionsForPost = makeGetReactionsForPost();
+    const getReactionsForPost = makeGetUniqueReactionsToPost();
     const getDisplayName = makeGetDisplayName();
 
     return createSelector(
@@ -542,6 +558,12 @@ export function splitMessageBasedOnCaretPosition(caretPosition: number, message:
     return {firstPiece, lastPiece};
 }
 
+export function splitMessageBasedOnTextSelection(selectionStart: number, selectionEnd: number, message: string): {firstPiece: string; lastPiece: string} {
+    const firstPiece = message.substring(0, selectionStart);
+    const lastPiece = message.substring(selectionEnd, message.length);
+    return {firstPiece, lastPiece};
+}
+
 export function getNewMessageIndex(postListIds: string[]): number {
     return postListIds.findIndex(
         (item) => item.indexOf(PostListRowListIds.START_OF_NEW_MESSAGES) === 0,
@@ -583,4 +605,45 @@ export function getPostURL(state: GlobalState, post: Post): string {
     default:
         return `/${team.name}/channels/${channel.name}${postURI}`;
     }
+}
+
+export function matchUserMentionTriggersWithMessageMentions(userMentionKeys: UserMentionKey[],
+    messageMentionKeys: RegExpMatchArray): boolean {
+    let isMentioned = false;
+    for (const mentionKey of userMentionKeys) {
+        const isPresentInMessage = messageMentionKeys.includes(mentionKey.key);
+        if (isPresentInMessage) {
+            isMentioned = true;
+            break;
+        }
+    }
+    return isMentioned;
+}
+
+/**
+ * This removes custom emoji reactions of a post, which are deleted from the custom emoji store.
+ */
+export function makeGetUniqueReactionsToPost(): (state: GlobalState, postId: Post['id']) => Record<string, Reaction> | undefined | null {
+    const getReactionsForPost = makeGetReactionsForPost();
+
+    return createSelector(
+        'makeGetUniqueReactionsToPost',
+        (state: GlobalState, postId: string) => getReactionsForPost(state, postId),
+        getEmojiMap,
+        (reactions, emojiMap) => {
+            if (!reactions) {
+                return null;
+            }
+
+            const reactionsForPost: Record<string, Reaction> = {};
+
+            Object.entries(reactions).forEach(([userIdEmojiKey, emojiReaction]) => {
+                if (emojiMap.get(emojiReaction.emoji_name)) {
+                    reactionsForPost[userIdEmojiKey] = emojiReaction;
+                }
+            });
+
+            return reactionsForPost;
+        },
+    );
 }

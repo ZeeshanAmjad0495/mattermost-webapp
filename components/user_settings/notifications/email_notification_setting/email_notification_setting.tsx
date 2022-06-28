@@ -5,10 +5,10 @@ import React from 'react';
 import {FormattedMessage} from 'react-intl';
 
 import {getEmailInterval} from 'mattermost-redux/utils/notify_props';
-import {PreferenceType} from 'mattermost-redux/types/preferences';
+import {PreferenceType} from '@mattermost/types/preferences';
 
 import {Preferences, NotificationLevels} from 'utils/constants';
-import {localizeMessage} from 'utils/utils.jsx';
+import {localizeMessage} from 'utils/utils';
 import SettingItemMax from 'components/setting_item_max.jsx';
 import SettingItemMin from 'components/setting_item_min';
 
@@ -332,8 +332,8 @@ export default class EmailNotificationSetting extends React.PureComponent<Props,
                         </div>
                         <div className='mt-5'>
                             <FormattedMessage
-                                id='user.settings.notifications.threads'
-                                defaultMessage={'When enabled, any replies to a thread you\'re following will send a desktop notification.'}
+                                id='user.settings.notifications.email_threads'
+                                defaultMessage={'When enabled, any reply to a thread you\'re following will send an email notification.'}
                             />
                         </div>
                     </fieldset>
