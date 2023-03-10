@@ -25,6 +25,7 @@ import './style.scss';
 
 type Props = {
     onHide?: () => void;
+    backButtonAction?: () => void;
 };
 
 function ErrorModal(props: Props) {
@@ -35,6 +36,13 @@ function ErrorModal(props: Props) {
     const isSuccessModalOpen = useSelector((state: GlobalState) =>
         isModalOpen(state, ModalIdentifiers.ERROR_MODAL),
     );
+
+    const onBackButtonPress = () => {
+        if (props.backButtonAction) {
+            props.backButtonAction();
+        }
+        dispatch(closeModal(ModalIdentifiers.ERROR_MODAL));
+    };
 
     const onHide = () => {
         dispatch(closeModal(ModalIdentifiers.ERROR_MODAL));
@@ -48,50 +56,52 @@ function ErrorModal(props: Props) {
             show={isSuccessModalOpen}
             onClose={onHide}
         >
-            <IconMessage
-                formattedTitle={
-                    <FormattedMessage
-                        defaultMessage={'We were unable to change your plan'}
-                        id={'error_modal.title'}
-                        values={{
-                            selectedProductName: subscriptionProduct?.name,
-                        }}
-                    />
-                }
-                formattedSubtitle={
-                    <FormattedMessage
-                        id={'error_modal.subtitle'}
-                        defaultMessage={
-                            'An error occurred while changing your plan. Please go back and try again, or contact the support team.'
-                        }
-                        values={{plan: subscriptionProduct?.name}}
-                    />
-                }
-                error={true}
-                icon={
-                    <PaymentFailedSvg
-                        width={444}
-                        height={313}
-                    />
-                }
-                formattedButtonText={
-                    <FormattedMessage
-                        defaultMessage={'Try again'}
-                        id={'error_modal.try_again'}
-                    />
-                }
-                formattedTertiaryButonText={
-                    <FormattedMessage
-                        defaultMessage={'Contact Support'}
-                        id={
-                            'admin.billing.subscription.privateCloudCard.contactSupport'
-                        }
-                    />
-                }
-                tertiaryButtonHandler={openContactUs}
-                buttonHandler={onHide}
-                className={'success'}
-            />
+            <div className='cloud_subscribe_result_modal'>
+                <IconMessage
+                    formattedTitle={
+                        <FormattedMessage
+                            defaultMessage={'We were unable to change your plan'}
+                            id={'error_modal.title'}
+                            values={{
+                                selectedProductName: subscriptionProduct?.name,
+                            }}
+                        />
+                    }
+                    formattedSubtitle={
+                        <FormattedMessage
+                            id={'error_modal.subtitle'}
+                            defaultMessage={
+                                'An error occurred while changing your plan. Please go back and try again, or contact the support team.'
+                            }
+                            values={{plan: subscriptionProduct?.name}}
+                        />
+                    }
+                    error={true}
+                    icon={
+                        <PaymentFailedSvg
+                            width={444}
+                            height={313}
+                        />
+                    }
+                    formattedButtonText={
+                        <FormattedMessage
+                            defaultMessage={'Try again'}
+                            id={'error_modal.try_again'}
+                        />
+                    }
+                    formattedTertiaryButonText={
+                        <FormattedMessage
+                            defaultMessage={'Contact Support'}
+                            id={
+                                'admin.billing.subscription.privateCloudCard.contactSupport'
+                            }
+                        />
+                    }
+                    tertiaryButtonHandler={openContactUs}
+                    buttonHandler={onBackButtonPress}
+                    className={'success'}
+                />
+            </div>
         </FullScreenModal>
     );
 }

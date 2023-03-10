@@ -4,19 +4,24 @@
         display: flex;
         align-items: center;
         margin-bottom: 4px;
+        gap: 8px;
 
         .display-name {
-            margin-left: 8px;
+            overflow: hidden;
             color: var(--center-channel-color);
-            font-family: 'Open Sans';
+            font-family: 'Open Sans', sans-serif;
             font-size: 12px;
             font-style: normal;
             font-weight: 600;
             line-height: 16px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .reply-count {
+            flex: 1;
             margin-left: auto;
+            text-align: end;
 
             i.icon {
                 width: 12px;
@@ -27,7 +32,7 @@
 
             span {
                 color: rgba(var(--center-channel-color-rgb), 0.64);
-                font-family: 'Open Sans';
+                font-family: 'Open Sans', sans-serif;
                 font-size: 11px;
                 font-style: normal;
                 font-weight: 600;
@@ -44,12 +49,22 @@
         margin: 0;
         -webkit-box-orient: vertical;
         color: rgba(var(--center-channel-color-rgb), 0.72);
-        font-family: 'Open Sans';
+        font-family: 'Open Sans', sans-serif;
         font-size: 12px;
         font-style: normal;
         font-weight: 400;
         -webkit-line-clamp: 2;
         line-height: 16px;
+
+        .compliance-information {
+            font-style: italic;
+        }
+
+        .markdown__heading {
+            margin: inherit;
+            font-size: inherit;
+            line-height: inherit;
+        }
 
         .file_card {
             width: auto;

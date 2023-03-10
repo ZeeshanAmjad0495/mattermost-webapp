@@ -5,10 +5,13 @@ import React from 'react';
 import {Modal} from 'react-bootstrap';
 import {FormattedMessage} from 'react-intl';
 import classNames from 'classnames';
+import {useSelector} from 'react-redux';
 
 import MattermostLogo from 'components/widgets/icons/mattermost_logo';
+import {GlobalState} from 'types/store';
 
 import './about_build_modal_cloud.scss';
+import ExternalLink from 'components/external_link';
 
 type Props = {
     onExited: () => void;
@@ -24,6 +27,13 @@ declare const COMMIT_HASH: string;
 export default function AboutBuildModalCloud(props: Props) {
     const config = props.config;
     const license = props.license;
+
+    let companyName = license.Company;
+    const companyInfo = useSelector((state: GlobalState) => state.entities.cloud.customer);
+
+    if (companyInfo) {
+        companyName = companyInfo.name;
+    }
 
     const title = (
         <FormattedMessage
@@ -45,7 +55,7 @@ export default function AboutBuildModalCloud(props: Props) {
                 id='about.licensed'
                 defaultMessage='Licensed to:'
             />
-            {'\u00a0' + license.Company}
+            {'\u00a0' + companyName}
         </div>
     );
 
@@ -101,31 +111,28 @@ export default function AboutBuildModalCloud(props: Props) {
                                 defaultMessage='Mattermost is made possible by the open source software used in our <linkServer>server</linkServer>, <linkDesktop>desktop</linkDesktop> and <linkMobile>mobile</linkMobile> apps.'
                                 values={{
                                     linkServer: (msg: React.ReactNode) => (
-                                        <a
+                                        <ExternalLink
                                             href='https://github.com/mattermost/mattermost-server/blob/master/NOTICE.txt'
-                                            target='_blank'
-                                            rel='noreferrer'
+                                            location='about_build_modal_cloud'
                                         >
                                             {msg}
-                                        </a>
+                                        </ExternalLink>
                                     ),
                                     linkDesktop: (msg: React.ReactNode) => (
-                                        <a
+                                        <ExternalLink
                                             href='https://github.com/mattermost/desktop/blob/master/NOTICE.txt'
-                                            target='_blank'
-                                            rel='noreferrer'
+                                            location='about_build_modal_cloud'
                                         >
                                             {msg}
-                                        </a>
+                                        </ExternalLink>
                                     ),
                                     linkMobile: (msg: React.ReactNode) => (
-                                        <a
+                                        <ExternalLink
                                             href='https://github.com/mattermost/mattermost-mobile/blob/master/NOTICE.txt'
-                                            target='_blank'
-                                            rel='noreferrer'
+                                            location='about_build_modal_cloud'
                                         >
                                             {msg}
-                                        </a>
+                                        </ExternalLink>
                                     ),
                                 }}
                             />

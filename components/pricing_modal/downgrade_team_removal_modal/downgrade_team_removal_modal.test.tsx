@@ -1,17 +1,15 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
-//
+
 import React from 'react';
 
-import configureStore from 'redux-mock-store';
 import * as redux from 'react-redux';
 import {screen} from '@testing-library/react';
 
-import thunk from 'redux-thunk';
-
 import {renderWithIntl} from 'tests/react_testing_utils';
-import {CloudProducts} from 'utils/constants';
+import mockStore from 'tests/test_store';
 
+import {CloudProducts} from 'utils/constants';
 import {FileSizes} from 'utils/file_utils';
 
 import DowngradeTeamRemovalModal from './';
@@ -270,7 +268,7 @@ describe('components/pricing_modal/downgrade_team_removal_modal', () => {
                 subscription: {
                     is_free_trial: 'false',
                     trial_end_at: 0,
-                    product_id: 'prod_starter',
+                    product_id: 'prod_free',
                 },
                 limits: {
                     limitsLoaded: true,
@@ -282,7 +280,7 @@ describe('components/pricing_modal/downgrade_team_removal_modal', () => {
                             history: 10000,
                         },
                         files: {
-                            total_storage: 10 * FileSizes.Gigabyte,
+                            total_storage: FileSizes.Gigabyte,
                         },
                         teams: {
                             active: 1,
@@ -294,10 +292,17 @@ describe('components/pricing_modal/downgrade_team_removal_modal', () => {
                     },
                 },
                 products: {
-                    prod_starter: {
-                        id: 'prod_starter',
-                        name: 'Cloud Starter',
+                    prod_free: {
+                        id: 'prod_free',
+                        name: 'Cloud Free',
                         sku: CloudProducts.STARTER,
+                        price_per_seat: 0,
+                        product_family: 'cloud',
+                        description: '',
+                        add_ons: [],
+                        billing_scheme: 'flat_fee',
+                        recurring_interval: 'month',
+                        cross_sells_to: '',
                     },
                     prod_enterprise: {
                         id: 'prod_enterprise',
@@ -319,13 +324,12 @@ describe('components/pricing_modal/downgrade_team_removal_modal', () => {
     };
 
     test('renders modal', () => {
-        const mockStore = configureStore([thunk]);
         const store = mockStore(state);
         renderWithIntl(
             <redux.Provider store={store}>
                 <DowngradeTeamRemovalModal
-                    product_id={'prod_starter'}
-                    starterProductName={'Cloud Starter'}
+                    product_id={'prod_free'}
+                    starterProduct={state.entities.cloud.products.prod_free}
                 />
             </redux.Provider>,
         );
@@ -334,13 +338,12 @@ describe('components/pricing_modal/downgrade_team_removal_modal', () => {
     });
 
     test('renders dropdown with 4+ teams', () => {
-        const mockStore = configureStore([thunk]);
         const store = mockStore(state);
         renderWithIntl(
             <redux.Provider store={store}>
                 <DowngradeTeamRemovalModal
-                    product_id={'prod_starter'}
-                    starterProductName={'Cloud Starter'}
+                    product_id={'prod_free'}
+                    starterProduct={state.entities.cloud.products.prod_free}
                 />
             </redux.Provider>,
         );
@@ -350,13 +353,12 @@ describe('components/pricing_modal/downgrade_team_removal_modal', () => {
     test('renders radio buttons with fewer than 4 teams', () => {
         const newState = {...state};
         newState.entities.usage.teams.active = 2;
-        const mockStore = configureStore([thunk]);
         const store = mockStore(state);
         renderWithIntl(
             <redux.Provider store={store}>
                 <DowngradeTeamRemovalModal
-                    product_id={'prod_starter'}
-                    starterProductName={'Cloud Starter'}
+                    product_id={'prod_free'}
+                    starterProduct={state.entities.cloud.products.prod_free}
                 />
             </redux.Provider>,
         );

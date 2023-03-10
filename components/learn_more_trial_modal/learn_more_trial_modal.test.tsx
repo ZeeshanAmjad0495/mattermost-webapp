@@ -4,9 +4,6 @@
 import React from 'react';
 
 import {Provider} from 'react-redux';
-import configureStore from 'redux-mock-store';
-
-import thunk from 'redux-thunk';
 
 import {shallow} from 'enzyme';
 
@@ -15,6 +12,7 @@ import LearnMoreTrialModal from 'components/learn_more_trial_modal/learn_more_tr
 import GenericModal from 'components/generic_modal';
 
 import {mountWithIntl} from 'tests/helpers/intl-test-helper';
+import mockStore from 'tests/test_store';
 
 jest.mock('actions/telemetry_actions.jsx', () => {
     const original = jest.requireActual('actions/telemetry_actions.jsx');
@@ -33,6 +31,9 @@ describe('components/learn_more_trial_modal/learn_more_trial_modal', () => {
     // required state to mount using the provider
     const state = {
         entities: {
+            users: {
+                currentUserId: 'current_user_id',
+            },
             admin: {
                 analytics: {
                     TOTAL_USERS: 9,
@@ -45,6 +46,9 @@ describe('components/learn_more_trial_modal/learn_more_trial_modal', () => {
                 license: {
                     IsLicensed: 'false',
                     Cloud: 'true',
+                },
+                config: {
+                    DiagnosticsEnabled: 'false',
                 },
             },
             cloud: {
@@ -66,7 +70,6 @@ describe('components/learn_more_trial_modal/learn_more_trial_modal', () => {
         onExited: jest.fn(),
     };
 
-    const mockStore = configureStore([thunk]);
     const store = mockStore(state);
 
     test('should match snapshot', () => {

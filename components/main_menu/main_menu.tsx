@@ -1,7 +1,6 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
 
-/* eslint-disable max-lines */
 import React from 'react';
 import {injectIntl, IntlShape} from 'react-intl';
 
@@ -9,7 +8,7 @@ import {Permissions} from 'mattermost-redux/constants';
 
 import * as GlobalActions from 'actions/global_actions';
 import {FREEMIUM_TO_ENTERPRISE_TRIAL_LENGTH_DAYS} from 'utils/cloud_utils';
-import {Constants, ModalIdentifiers} from 'utils/constants';
+import {Constants, LicenseSkus, ModalIdentifiers, MattermostFeatures} from 'utils/constants';
 import {cmdOrCtrlPressed, isKeyPressed} from 'utils/utils';
 import {makeUrlSafe} from 'utils/url';
 import * as UserAgent from 'utils/user_agent';
@@ -31,6 +30,7 @@ import Menu from 'components/widgets/menu/menu';
 import RestrictedIndicator from 'components/widgets/menu/menu_items/restricted_indicator';
 import TeamGroupsManageModal from 'components/team_groups_manage_modal';
 
+import {trackEvent} from 'actions/telemetry_actions';
 import {ModalData} from 'types/actions';
 import {PluginComponent} from 'types/store/plugins';
 import {UserProfile} from '@mattermost/types/users';
@@ -61,6 +61,7 @@ export type Props = {
     teamUrl: string;
     isFirstAdmin: boolean;
     isCloud: boolean;
+    isStarterFree: boolean;
     isFreeTrial: boolean;
     usageDeltaTeams: number;
     location: {
@@ -153,7 +154,7 @@ export class MainMenu extends React.PureComponent<Props> {
 
         const someIntegrationEnabled = this.props.enableIncomingWebhooks || this.props.enableOutgoingWebhooks || this.props.enableCommands || this.props.enableOAuthServiceProvider || this.props.canManageSystemBots;
         const showIntegrations = !this.props.mobile && someIntegrationEnabled && this.props.canManageIntegrations;
-        const teamsLimitReached = this.props.isCloud && !this.props.isFreeTrial && this.props.usageDeltaTeams >= 0;
+        const teamsLimitReached = this.props.isStarterFree && !this.props.isFreeTrial && this.props.usageDeltaTeams >= 0;
         const createTeamRestricted = this.props.isCloud && (this.props.isFreeTrial || teamsLimitReached);
 
         const {formatMessage} = this.props.intl;
@@ -174,6 +175,7 @@ export class MainMenu extends React.PureComponent<Props> {
                         defaultMessage: 'Add people to the team',
                     })}
                     icon={this.props.mobile && <i className='fa fa-user-plus'/>}
+                    onClick={() => trackEvent('ui', 'click_sidebar_team_dropdown_invite_people')}
                 />
             );
         }
@@ -217,11 +219,19 @@ export class MainMenu extends React.PureComponent<Props> {
                 </Menu.Group>
                 <Menu.Group>
                     <Menu.ItemToggleModalRedux
+                        id='profileSettings'
+                        modalId={ModalIdentifiers.USER_SETTINGS}
+                        dialogType={UserSettingsModal}
+                        dialogProps={{isContentProductSettings: false}}
+                        text={formatMessage({id: 'navbar_dropdown.profileSettings', defaultMessage: 'Profile'})}
+                        icon={<i className='fa fa-user'/>}
+                    />
+                    <Menu.ItemToggleModalRedux
                         id='accountSettings'
                         modalId={ModalIdentifiers.USER_SETTINGS}
                         dialogType={UserSettingsModal}
                         dialogProps={{isContentProductSettings: true}}
-                        text={formatMessage({id: 'navbar_dropdown.accountSettings', defaultMessage: 'Profile'})}
+                        text={formatMessage({id: 'navbar_dropdown.accountSettings', defaultMessage: 'Settings'})}
                         icon={<i className='fa fa-cog'/>}
                     />
                 </Menu.Group>
@@ -473,6 +483,8 @@ export class MainMenu extends React.PureComponent<Props> {
                             text={formatMessage({id: 'navbar_dropdown.create', defaultMessage: 'Create a Team'})}
                             sibling={createTeamRestricted && (
                                 <RestrictedIndicator
+                                    feature={MattermostFeatures.CREATE_MULTIPLE_TEAMS}
+                                    minimumPlanRequiredForFeature={LicenseSkus.Professional}
                                     blocked={!this.props.isFreeTrial}
                                     tooltipMessage={formatMessage({
                                         id: 'navbar_dropdown.create.tooltip.cloudFreeTrial',

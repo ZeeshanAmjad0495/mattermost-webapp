@@ -1,12 +1,10 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
+
 import React from 'react';
 import {Provider} from 'react-redux';
-import configureStore from 'redux-mock-store';
 
 import {act} from '@testing-library/react';
-
-import thunk from 'redux-thunk';
 
 import {ReactWrapper} from 'enzyme';
 
@@ -15,10 +13,9 @@ import {BrowserRouter} from 'react-router-dom';
 import {TimeFrames} from '@mattermost/types/insights';
 
 import {mountWithIntl} from 'tests/helpers/intl-test-helper';
+import mockStore from 'tests/test_store';
 
 import TopBoardsTable from './top_boards_table';
-
-const mockStore = configureStore([thunk]);
 
 const actImmediate = (wrapper: ReactWrapper) =>
     act(
@@ -93,7 +90,7 @@ describe('components/activity_and_insights/insights/top_boards_table', () => {
                                 icon: '📅',
                                 title: 'Test calendar ',
                                 activityCount: 32,
-                                activeUsers: '9qobtrxa93dhfg1fqmhcq5wj4o',
+                                activeUsers: ['9qobtrxa93dhfg1fqmhcq5wj4o'],
                                 createdBy: '9qobtrxa93dhfg1fqmhcq5wj4o',
                             },
                             {
@@ -101,6 +98,16 @@ describe('components/activity_and_insights/insights/top_boards_table', () => {
                                 icon: '📅',
                                 title: 'Content Calendar ',
                                 activityCount: 24,
+                                activeUsers: ['9qobtrxa93dhfg1fqmhcq5wj4o', '9x4to68xqiyfzb8dxwfpbqopie'],
+                                createdBy: '9qobtrxa93dhfg1fqmhcq5wj4o',
+                            },
+                            {
+                                boardID: 'bf3mmu7hjgprpmp1ekiozyggrjh',
+                                icon: '📅',
+                                title: 'Content Calendar ',
+                                activityCount: 24,
+
+                                // MM-49023
                                 activeUsers: '9qobtrxa93dhfg1fqmhcq5wj4o,9x4to68xqiyfzb8dxwfpbqopie',
                                 createdBy: '9qobtrxa93dhfg1fqmhcq5wj4o',
                             },
@@ -111,7 +118,7 @@ describe('components/activity_and_insights/insights/top_boards_table', () => {
         },
     };
 
-    test('check if 2 team top boards render', async () => {
+    test('check if 3 team top boards render', async () => {
         const store = await mockStore(initialState);
         const wrapper = mountWithIntl(
             <Provider store={store}>
@@ -123,7 +130,7 @@ describe('components/activity_and_insights/insights/top_boards_table', () => {
             </Provider>,
         );
         await actImmediate(wrapper);
-        expect(wrapper.find('.DataGrid_row').length).toEqual(2);
+        expect(wrapper.find('.DataGrid_row').length).toEqual(3);
     });
 
     test('check if 0 top boards render', async () => {

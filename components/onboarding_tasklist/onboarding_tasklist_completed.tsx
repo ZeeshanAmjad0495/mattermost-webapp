@@ -1,24 +1,24 @@
 // Copyright (c) 2015-present Mattermost, Inc. All Rights Reserved.
 // See LICENSE.txt for license information.
+
 import React, {useEffect} from 'react';
 import {CSSTransition} from 'react-transition-group';
 import styled from 'styled-components';
-
 import {FormattedMessage, useIntl} from 'react-intl';
-
 import {useSelector, useDispatch} from 'react-redux';
 
-import FormattedMarkdownMessage from 'components/formatted_markdown_message';
-
-import completedImg from 'images/completed.svg';
-
 import {GlobalState} from '@mattermost/types/store';
+
 import {getLicense} from 'mattermost-redux/selectors/entities/general';
 import {getPrevTrialLicense} from 'mattermost-redux/actions/admin';
-import {LicenseSkus} from 'mattermost-redux/types/general';
+
+import {AboutLinks, LicenseLinks, LicenseSkus} from 'utils/constants';
 
 import StartTrialBtn from 'components/learn_more_trial_modal/start_trial_btn';
 import CloudStartTrialButton from 'components/cloud_start_trial/cloud_start_trial_btn';
+
+import completedImg from 'images/completed.svg';
+import ExternalLink from 'components/external_link';
 
 const CompletedWrapper = styled.div`
     display: flex;
@@ -181,7 +181,7 @@ const Completed = (props: Props): JSX.Element => {
                             </span>
                             {isCloud ? (
                                 <CloudStartTrialButton
-                                    message={formatMessage({id: 'menu.cloudFree.tryFreeFor30Days', defaultMessage: 'Try free for 30 days'})}
+                                    message={formatMessage({id: 'trial_btn.free.tryFreeFor30Days', defaultMessage: 'Try free for 30 days'})}
                                     telemetryId={'start_cloud_trial_after_completing_steps'}
                                     extraClass={'btn btn-primary'}
                                     afterTrialRequest={dismissAction}
@@ -205,17 +205,45 @@ const Completed = (props: Props): JSX.Element => {
                     )}
                     <div className='download-apps'>
                         <span>
-                            <FormattedMarkdownMessage
+                            <FormattedMessage
                                 id='onboardingTask.checklist.downloads'
-                                defaultMessage='Now that you’re all set up, [download our apps.](!https://mattermost.com/download)'
+                                defaultMessage='Now that you’re all set up, <link>download our apps.</link>!'
+                                values={{
+                                    link: (msg: React.ReactNode) => (
+                                        <ExternalLink
+                                            location='onboarding_tasklist_completed'
+                                            href='https://mattermost.com/download/#desktop'
+                                        >
+                                            {msg}
+                                        </ExternalLink>
+                                    ),
+                                }}
                             />
                         </span>
                     </div>
                     {showStartTrialBtn && <div className='disclaimer'>
                         <span>
-                            <FormattedMarkdownMessage
+                            <FormattedMessage
                                 id='onboardingTask.checklist.disclaimer'
-                                defaultMessage='By clicking “Start trial”, I agree to the [Mattermost Software Evaluation Agreement,](!https://mattermost.com/software-evaluation-agreement) [privacy policy,](!https://mattermost.com/privacy-policy/) and receiving product emails.'
+                                defaultMessage='By clicking “Start trial”, I agree to the <linkEvaluation>Mattermost Software and Services License Agreement</linkEvaluation>, <linkPrivacy>privacy policy</linkPrivacy> and receiving product emails.'
+                                values={{
+                                    linkEvaluation: (msg: React.ReactNode) => (
+                                        <ExternalLink
+                                            href={LicenseLinks.SOFTWARE_SERVICES_LICENSE_AGREEMENT}
+                                            location='onboarding_tasklist_completed'
+                                        >
+                                            {msg}
+                                        </ExternalLink>
+                                    ),
+                                    linkPrivacy: (msg: React.ReactNode) => (
+                                        <ExternalLink
+                                            href={AboutLinks.PRIVACY_POLICY}
+                                            location='onboarding_tasklist_completed'
+                                        >
+                                            {msg}
+                                        </ExternalLink>
+                                    ),
+                                }}
                             />
                         </span>
                     </div>}

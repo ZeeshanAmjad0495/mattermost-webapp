@@ -4,9 +4,10 @@
 import React from 'react';
 import {FormattedMessage} from 'react-intl';
 
-import FormattedMarkdownMessage from 'components/formatted_markdown_message.jsx';
+import FormattedMarkdownMessage from 'components/formatted_markdown_message';
 import HelpLinks from 'components/help/components/help_links';
 import {HelpLink} from 'components/help/types';
+import ExternalLink from 'components/external_link';
 
 export default function Messaging(): JSX.Element {
     return (
@@ -60,16 +61,16 @@ export default function Messaging(): JSX.Element {
             <p>
                 <FormattedMessage
                     id='help.messaging.emoji'
-                    defaultMessage={'**Add Emoji:** Type ":" to open an emoji autocomplete. If the existing emojis don\'t say what you want to express, you can also create your own <link>Custom Emoji</link>.'}
+                    defaultMessage={'<strong>Add Emoji:</strong> Type ":" to open an emoji autocomplete. If the existing emojis don\'t say what you want to express, you can also create your own <link>Custom Emoji</link>.'}
                     values={{
+                        strong: (msg: React.ReactNode) => <strong>{msg}</strong>,
                         link: (msg: React.ReactNode) => (
-                            <a
+                            <ExternalLink
                                 href='https://docs.mattermost.com/messaging/using-emoji.html#creating-custom-emojis'
-                                target='_blank'
-                                rel='noreferrer'
+                                location='messaging_help'
                             >
                                 {msg}
-                            </a>
+                            </ExternalLink>
                         ),
                     }}
                 />

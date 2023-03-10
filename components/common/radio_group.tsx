@@ -3,19 +3,19 @@
 
 import React, {ReactNode} from 'react';
 
-import Badge from 'components/widgets/badges/badge';
+import Tag from 'components/widgets/tag/tag';
 
 type RadioGroupProps = {
     id: string;
     values: Array<{ key: React.ReactNode | React.ReactNodeArray; value: string; testId?: string}>;
     value: string;
-    badge?: {matchVal: string; text: ReactNode};
+    badge?: {matchVal: string; badgeContent: ReactNode; extraClass?: string} | undefined | null;
     sideLegend?: {matchVal: string; text: ReactNode};
-    isDisabled?: (id: string) => boolean | boolean;
+    isDisabled?: null | ((id: string) => boolean);
     onChange(e: React.ChangeEvent<HTMLInputElement>): void;
     testId?: string;
 }
-const RadioButtonGroup: React.FC<RadioGroupProps> = ({
+const RadioButtonGroup = ({
     id,
     onChange,
     isDisabled,
@@ -59,9 +59,10 @@ const RadioButtonGroup: React.FC<RadioGroupProps> = ({
                     }
                 </label>
                 {(badge && val === badge?.matchVal) &&
-                    <Badge className='radio-badge'>
-                        {badge.text}
-                    </Badge>
+                    <Tag
+                        className={`radio-badge ${badge.extraClass ?? ''}`}
+                        text={badge.badgeContent}
+                    />
                 }
             </div>,
         );

@@ -7,6 +7,7 @@
 // - Use element ID when selecting an element. Create one if none.
 // ***************************************************************
 
+// Stage: @prod
 // Group: @scroll
 
 import * as MESSAGES from '../../fixtures/messages';
@@ -88,7 +89,7 @@ describe('Scroll', () => {
 
         // * Verify that messages do no have user's name in post
         cy.getLastPostId().then((parentMessageId) => {
-            cy.get(`#${parentMessageId}_message`).parent().invoke('text').then((text) => {
+            cy.get(`#${parentMessageId}_message`).invoke('text').then((text) => {
                 expect(text).to.equal(message);
                 expect(text).to.not.have.string('sysadmin');
             });
@@ -102,7 +103,7 @@ describe('Scroll', () => {
         cy.getLastPostId().then((parentMessageId) => {
             cy.get(`#${parentMessageId}_message`).parent().invoke('text').then((text) => {
                 expect(text).to.contain('sysadmin');
-                expect(text).to.contain(`${message}`);
+                expect(text).to.contain(message);
             });
         });
     });
